@@ -1,7 +1,6 @@
 import numpy as np
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, DataCollatorForLanguageModeling, Trainer, TrainingArguments
-from peft import LoraConfig, get_peft_model
+from transformers import AutoTokenizer, AutoModelForCausalLM
 from generate_synthetic_data import generate_synthetic_data, data_to_text
 from inference import test_model,infer
 import argparse 

@@ -1,7 +1,12 @@
-### README for Fine-Tuning and Testing Language Models
+### README : Robust LLMs that work in OOD settings
 
-This repository contains scripts for fine-tuning and testing large language models with options for full fine-tuning, LoRA, and QLoRA adaptation methods. It supports generating synthetic data for training and provides functionality for testing the fine-tuned models with custom prompts.
 
+This repository contains scripts for 
+fine-tuning 
+Inference from differennt public models like GPT-2 , LLAMA etc 
+testing LLMs 
+FineTuning : full fine-tuning, LoRA, and QLoRA adaptation methods. 
+generating synthetic data
 
 #### Setup
 
