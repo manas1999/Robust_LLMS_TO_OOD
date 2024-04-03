@@ -5,6 +5,7 @@ from peft import LoraConfig, get_peft_model
 from generate_synthetic_data import generate_synthetic_data, data_to_text
 from inference import test_model,infer
 import argparse 
+from inference import infer_langchain,infer_hf,infer,infer_gpt
 
 from fineTune import full_finetune,fine_tune_lora,fine_tune_with_qlora
 
@@ -12,15 +13,24 @@ from fineTune import full_finetune,fine_tune_lora,fine_tune_with_qlora
 def main():
     # Set up argument parser
     parser = argparse.ArgumentParser(description='Fine-tune or test a model on a given dataset.')
-    parser.add_argument('--model_name', type=str, help='Model name to use', required=True, default="chargoddard/Yi-34B-Llama")
+    parser.add_argument('--model_name', type=str, help='Model name to use', default="chargoddard/Yi-34B-Llama")
     parser.add_argument('--finetune', type=str, choices=['lora', 'qlora', 'full_finetune'], help='Choose the fine-tuning method: LoRA, qlora, or full fine-tune')
-    parser.add_argument('--infer', action='store_true', help='Enable testing mode to directly test the model without fine-tuning')
+    parser.add_argument('--infer', nargs=2, metavar=('MODEL_TYPE', 'PROMPT'), help='Specify the inference model and the prompt string for testing the model')
     parser.add_argument('--test_data', type=str, help='Path to the test data file', default="test_dataset.txt")
     parser.add_argument('--prompt', type=str, help='Prompt string for testing the model', default="")
     parser.add_argument('--data', type=str, choices=['synthetic', 'dataset'], help='Choose the data source for fine-tuning: synthetic data or external dataset')
 
 
     args = parser.parse_args()
+
+    #Test ChatGPT-4
+    if args.infer[0] == 'gpt':
+        infer_gpt(args.infer[1])
+    elif args.infer[0] == 'langchain':
+        infer_langchain(args.infer[1])
+    elif args.infer[0] == 'hf':
+        infer_hf(args.infer[1])
+
 
     #Load the model
 
@@ -30,8 +40,8 @@ def main():
         
 
 
-    if args.infer:
-        infer(model, tokenizer, args.prompt)
+    if args.infer[0] == 'finetune':
+        infer(model, tokenizer, args.infer[1])
     else:
         if args.data_source == 'synthetic':
     # Generate synthetic data

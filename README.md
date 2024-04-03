@@ -7,7 +7,10 @@ This repository contains scripts for fine-tuning and testing large language mode
 
 ```bash
 pip install transformers torch numpy datasets
-pip install git+https://github.com/path/to/peft.git # Assuming peft is not available on PyPI and 
+pip install git+https://github.com/path/to/peft.git 
+pip install langchain
+pip install openai==0.28
+pip install -U langchain-community      
 ```
 
 #### Usage
@@ -25,8 +28,17 @@ The main script is designed to be used from the command line with several option
 
 ```bash
 python main.py --model_name="chargoddard/Yi-34B-Llama" --finetune="lora" --data="synthetic"
+python main.py --model_name="chargoddard/Yi-34B-Llama" --infer "finetune" "tell me a jock ?"
+python main.py --model_name="chargoddard/Yi-34B-Llama" --test_data PATH_TEST_FILE
 
-python main.py --model_name nomic-ai/gpt4all-j  --infer --prompt "Hello , How are you ?"
+
+
+python main.py   --infer langchain "Which is the hottest planet?"
+python main.py   --infer gpt "Which is the hottest planet?"
+python main.py   --infer hf "Which is the hottest planet?"
+
+
+
 
 ```
 

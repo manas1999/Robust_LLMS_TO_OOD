@@ -1,7 +1,9 @@
 import numpy as np
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
-
+import openai
+from langchain_openai import OpenAI
+from transformers import pipeline
 
 def test_model(test_texts_ood, y_test_ood, model_name):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -53,3 +55,38 @@ def infer(model, tokenizer , prompt):
     decoded_output = tokenizer.decode(output[0], skip_special_tokens=True)
     
     print("Generated Text:", decoded_output)
+
+
+
+def infer_gpt(msg) :
+    # Replace "your_api_key_here" with your actual OpenAI API key
+    openai.api_key = ''
+
+    response = openai.Completion.create(
+    model="tts-1", # or whichever model you're using
+    prompt=msg,
+    max_tokens=100
+    )
+    print(response.choices[0].message['content'])
+
+def infer_langchain(prompt):
+
+    # Initialize the LLM with your API key
+    llm = OpenAI(api_key="")
+
+    # Get the response from the LLM
+    response = llm(prompt)
+
+    # Print the output
+    print(response)
+
+
+
+def infer_hf(prompt):
+
+    # Use your Hugging Face API key
+    hf_api_key = ""
+
+    generator = pipeline(model="gpt2", use_auth_token=hf_api_key)
+    response = generator(prompt, max_length=50)
+    print(response[0]['generated_text'])
