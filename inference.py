@@ -4,6 +4,10 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 import openai
 from langchain_openai import OpenAI
 from transformers import pipeline
+from dotenv import load_dotenv
+import os
+
+
 
 def test_model(test_texts_ood, y_test_ood, model_name):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -58,16 +62,28 @@ def infer(model, tokenizer , prompt):
 
 
 
-def infer_gpt(msg) :
-    # Replace "your_api_key_here" with your actual OpenAI API key
-    openai.api_key = ''
+import openai
+import os
+import os
+import openai
+from dotenv import load_dotenv
 
-    response = openai.Completion.create(
-    model="tts-1", # or whichever model you're using
-    prompt=msg,
-    max_tokens=100
-    )
-    print(response.choices[0].message['content'])
+def infer_gpt(msg):
+    # Load environment variables from .env file
+    load_dotenv()
+    openai.api_key = ''
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # Adjusted to a newer, commonly used model. Adjust as needed.
+            messages=[
+                {"role": "user", "content": msg}
+            ]
+        )
+        print(response['choices'][0]['message']['content'].strip())  # Adjusted to match the new response structure
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
 
 def infer_langchain(prompt):
 

@@ -15,7 +15,8 @@ pip install transformers torch numpy datasets
 pip install git+https://github.com/path/to/peft.git 
 pip install langchain
 pip install openai==0.28
-pip install -U langchain-community      
+pip install -U langchain-community  
+pip install -U sentence-transformers    
 ```
 
 #### Usage
@@ -43,7 +44,16 @@ python main.py   --infer gpt "Which is the hottest planet?"
 python main.py   --infer hf "Which is the hottest planet?"
 
 
+#FLIPKART Data
+python main.py --flipkart Clean # to clean the data and save it to the disk use only once 
+python main.py --finetune qlora
+#YELP DATA CLEAN
+python main.py --yelp Clean 
+#imdb DATA CLEAN
+python main.py --imdb Clean 
 
+#PLOT EMBADDINGS:
+python main.py --plot_embaddings ag
 
 ```
 
