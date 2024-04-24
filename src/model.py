@@ -1,18 +1,20 @@
 import numpy as np
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModelForSequenceClassification, \
-    BertForSequenceClassification
+import pandas as pd
+from datasets import Dataset
+from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModelForSequenceClassification,BertForSequenceClassification
 # from generate_synthetic_data import generate_synthetic_data, data_to_text
 # from inference import test_model, infer
 import argparse
+from scripts.fine_tune import fine_tune_lora, fine_tune_with_qlora, full_finetune, finetune_roberta
 # from inference import infer_langchain, infer_hf, infer, infer_gpt
-# from fineTune import full_finetune, fine_tune_lora, fine_tune_with_qlora, finetune_roberta
-from plots import embeddings_plot
+# 
+from data.dataLoader import yelp_data_loader
 
-# Function to load the tokenizer and model
+'''# Function to load the tokenizer and model
 from scripts.fine_tune import fine_tune_lora, fine_tune_with_qlora, full_finetune, finetune_roberta
 from scripts.gen_data import generate_synthetic_data, data_to_text
-from scripts.infer import infer_gpt, infer_langchain, infer_hf, test_model, infer
+from scripts.infer import infer_gpt, infer_langchain, infer_hf, test_model, infer'''
 
 
 def get_model_and_tokenizer(model_name='bert-base-uncased', num_labels=3):
@@ -26,15 +28,37 @@ def main():
     parser.add_argument('--model_name', type=str, help='Model name to use', default="bert-base-uncased")
     parser.add_argument('--train_data', type=str, help='Path to the training data file')
     parser.add_argument('--test_data', type=str, help='Path to the test data file')
-    parser.add_argument('--finetune', action='store_true', help='Flag to fine-tune the model')
+    parser.add_argument('--finetune', type=str, choices=['lora', 'qlora', 'full_finetune','finetune_roberta'], help='Choose the fine-tuning method: LoRA, qlora, or full fine-tune')
     parser.add_argument('--infer', action='store_true', help='Flag to run inference on the model')
     parser.add_argument('--plot_embeddings', action='store_true', help='Flag to plot embeddings')
+    parser.add_argument('--dataset', type=str, help='dataset to load')
+
+
 
     args = parser.parse_args()
 
-    # Load the tokenizer and model
-    model, tokenizer = get_model_and_tokenizer(args.model_name)
+    #Load the dataset 
+    if args.dataset:
+        if(args.dataset == "yelp"):
+            data = yelp_data_loader.yelp_data_loader()
 
+        # select the method to finetune on
+    if args.finetune == 'lora':
+        fine_tune_lora("train_dataset.txt", args.model_name, tokenizer)
+        return
+    elif args.finetune == 'qlora':
+        fine_tune_with_qlora("train_dataset.txt", args.model_name)
+        return
+    elif args.finetune == "full_finetune":
+        full_finetune("train_dataset.txt", args.model_name, tokenizer)
+        return
+    elif args.finetune == "finetune_roberta":
+         finetune_roberta(data)
+         return
+
+
+
+    
     # plot embeddings
     if args.plot_embaddings:
         embeddings_plot.plot_embeddings()
@@ -52,18 +76,10 @@ def main():
             infer_hf(args.infer[1])
             return
 
-    # select the method to finetune on
-    if args.finetune == 'lora':
-        fine_tune_lora("train_dataset.txt", args.model_name, tokenizer)
-        return
-    elif args.finetune == 'qlora':
-        fine_tune_with_qlora("train_dataset.txt", args.model_name)
-        return
-    elif args.finetune == "full_finetune":
-        full_finetune("train_dataset.txt", args.model_name, tokenizer)
-        return
-    # elif args.finetune == "finetune_roberta":
-    #     finetune_roberta(data)
+
+    # Load the tokenizer and model
+    model, tokenizer = get_model_and_tokenizer(args.model_name)
+
 
     # test_model(test_texts_ood, y_test_ood)
 

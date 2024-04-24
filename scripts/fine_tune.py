@@ -7,8 +7,6 @@ from datasets import Dataset
 import torch
 import logging
 import time
-from accelerate import DataLoaderConfiguration
-
 
 def fine_tune_lora(dataset_path, model,tokenizer, output_dir="./finetuned_model", epochs=3):
 
@@ -156,80 +154,85 @@ def full_finetune(dataset_path, model, tokenizer, output_dir="./full_finetuned",
     trainer.train()
 
 
+
+
 def finetune_roberta(dataset):
     
     start_time = time.time()
+
+    # Setup the device (CUDA if available)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
     
-    # Initialize tokenizer
+    # Initialize tokenizer from pretrained
     print("Initializing tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained('roberta-base')
     
-    # Tokenize data
+    # Tokenize dataset function adjusted for batch processing
     print("Tokenizing dataset...")
     tokenize_start_time = time.time()
-    # Adjust the tokenization function to properly handle batched data
     
     def tokenize_function(batch):
+        # Handle possible None values in cleaned_reviews
         cleaned_reviews = [review if review is not None else "" for review in batch['cleaned_review']]
-        # Use the correct column name for labels
+        # Tokenize and map labels to numerical values
         tokenized_inputs = tokenizer(cleaned_reviews, padding="max_length", truncation=True, max_length=512)
-        #tokenized_inputs['labels'] = batch['Sentiment']  # Correct column name
         tokenized_inputs['labels'] = [1 if label == 'positive' else 0 for label in batch['Sentiment']]
-
         return tokenized_inputs
 
-
+    # Apply tokenization
     tokenized_dataset = dataset.map(tokenize_function, batched=True)
     tokenize_end_time = time.time()
-    print("Tokenization completed in {:.2f} seconds".format(tokenize_end_time - tokenize_start_time))
+    print(f"Tokenization completed in {tokenize_end_time - tokenize_start_time:.2f} seconds")
     
-    # Load the model
+    # Load the model and move it to the correct device
     print("Loading model...")
     model_loading_start_time = time.time()
-    model = AutoModelForSequenceClassification.from_pretrained('roberta-base', num_labels=2)
+    model = AutoModelForSequenceClassification.from_pretrained('roberta-base', num_labels=2).to(device)
     model_loading_end_time = time.time()
-    print("Model loaded in {:.2f} seconds".format(model_loading_end_time - model_loading_start_time))
+    print(f"Model loaded in {model_loading_end_time - model_loading_start_time:.2f} seconds")
     
-    data_loader_config = DataLoaderConfiguration(dispatch_batches=None, split_batches=False, even_batches=True, use_seedable_sampler=True)
     # Define training arguments
     print("Setting up training...")
     training_args = TrainingArguments(
-        output_dir='./results',
-        num_train_epochs=3,
-        per_device_train_batch_size=8,
-        per_device_eval_batch_size=16,
+        output_dir='../outputs/roberta/results',
+        num_train_epochs=1,
+        per_device_train_batch_size=16,
+        per_device_eval_batch_size=32,
         warmup_steps=500,
         weight_decay=0.01,
         logging_dir='./logs',
-        logging_steps=10,
+        logging_steps=50,
         evaluation_strategy="epoch",
-        save_strategy="epoch"
+        save_strategy="epoch",
+        fp16=torch.cuda.is_available(),  # Enabling this only if CUDA is available
     )
 
-    # Create a trainer
+    # Create and configure the trainer
     trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=tokenized_dataset,
     )
 
-    # Start training
+    # Start the training process
     print("Starting training...")
     training_start_time = time.time()
     trainer.train()
     training_end_time = time.time()
-    print("Training completed in {:.2f} seconds".format(training_end_time - training_start_time))
+    print(f"Training completed in {training_end_time - training_start_time:.2f} seconds")
 
-    # Save the model
+    # Save the model and tokenizer
     print("Saving the model...")
-    save_path = '/Users/manasmadine/Desktop/OneDrive/NLP/Project_Experements/EXP_1/FineTuned_Models/roberta/yelp_roberta_finetuned'
+    save_path = '../outputs/models/roberta_yelp'
     model.save_pretrained(save_path)
     tokenizer.save_pretrained(save_path)
 
     total_time = time.time() - start_time
-    print("Total process completed in {:.2f} seconds".format(total_time))
+    print(f"Total process completed in {total_time:.2f} seconds")
 
     return model
+
 
 
 
