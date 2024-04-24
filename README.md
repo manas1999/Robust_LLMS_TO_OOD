@@ -55,6 +55,9 @@ python main.py --imdb Clean
 #PLOT EMBADDINGS:
 python main.py --plot_embaddings ag
 
+#FIne tune roberta on Yelp dataset
+python main.py --finetune='finetune_roberta' --dataset='yelp'
+
 ```
 
 #### Fine-Tuning Methods
@@ -62,6 +65,7 @@ python main.py --plot_embaddings ag
 - **Full Fine-Tuning**: Updates all parameters of the model.
 - **LoRA**: Low-Rank Adaptation focuses on updating only a small set of parameters, reducing the computational cost.
 - **QLoRA**: A quantized version of LoRA that further reduces the model size and computational requirements.
+- **finetune-roberta**: full finetuning roberta model.
 
 #### Data Generation
 
