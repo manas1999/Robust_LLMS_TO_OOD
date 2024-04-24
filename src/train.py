@@ -13,7 +13,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def load_data(file_path, labels_path, masks_path):
     # Load the data
-    inputs = pd.read_csv(file_path).values.astype(np.int64)
+    inputs = pd.read_csv(file_path).values.astype(np.int64) ## Conversion from Float to Int decreases the precession 
     labels = pd.read_csv(labels_path).values.flatten().astype(np.int64)
     masks = pd.read_csv(masks_path).values.astype(np.int64)
 
