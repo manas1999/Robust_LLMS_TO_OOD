@@ -179,9 +179,15 @@ def finetune_roberta(dataset):
         tokenized_inputs = tokenizer(cleaned_reviews, padding="max_length", truncation=True, max_length=512)
         tokenized_inputs['labels'] = [1 if label == 'positive' else 0 for label in batch['Sentiment']]
         return tokenized_inputs
+    
+    # Split dataset into training and evaluation
+    dataset_dict = dataset.train_test_split(test_size=0.1)
 
-    # Apply tokenization
-    tokenized_dataset = dataset.map(tokenize_function, batched=True)
+    # Apply tokenization to training and evaluation datasets
+    tokenized_train_dataset = dataset_dict['train'].map(tokenize_function, batched=True)
+    tokenized_eval_dataset = dataset_dict['test'].map(tokenize_function, batched=True)
+    
+
     tokenize_end_time = time.time()
     print(f"Tokenization completed in {tokenize_end_time - tokenize_start_time:.2f} seconds")
     
@@ -212,7 +218,8 @@ def finetune_roberta(dataset):
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=tokenized_dataset,
+        train_dataset=tokenized_train_dataset,
+        eval_dataset=tokenized_eval_dataset
     )
 
     # Start the training process
