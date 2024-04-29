@@ -3,4 +3,4 @@
 .DS_Store
 .env
 data/preprocessing/__init__.py
-data/raw/SentimentAnalysis/
+data/raw/SentimentAnalysis/git 
