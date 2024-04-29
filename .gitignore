@@ -4,3 +4,5 @@
 .env
 data/preprocessing/__init__.py
 data/raw/SentimentAnalysis/git 
+data/processed/yelp/
+data/raw/SentimentAnalysis/
