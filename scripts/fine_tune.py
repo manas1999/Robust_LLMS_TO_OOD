@@ -173,11 +173,13 @@ def finetune_roberta(dataset):
     tokenize_start_time = time.time()
     
     def tokenize_function(batch):
-        # Handle possible None values in cleaned_reviews
-        cleaned_reviews = [review if review is not None else "" for review in batch['cleaned_review']]
-        # Tokenize and map labels to numerical values
-        tokenized_inputs = tokenizer(cleaned_reviews, padding="max_length", truncation=True, max_length=512)
-        tokenized_inputs['labels'] = [1 if label == 'positive' else 0 for label in batch['Sentiment']]
+        # Use 'text' as per your dataset schema
+        texts = [text if text is not None else "" for text in batch['Text']]
+        # Apply the updated label mapping
+        labels = [ label for label in batch['Label']]
+        # Tokenize and add labels
+        tokenized_inputs = tokenizer(texts, padding="max_length", truncation=True, max_length=512)
+        tokenized_inputs['labels'] = labels
         return tokenized_inputs
     
     # Split dataset into training and evaluation

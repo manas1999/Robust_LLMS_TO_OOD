@@ -9,7 +9,7 @@ import argparse
 from scripts.fine_tune import fine_tune_lora, fine_tune_with_qlora, full_finetune, finetune_roberta
 # from inference import infer_langchain, infer_hf, infer, infer_gpt
 # 
-from data.dataLoader import yelp_data_loader
+from data.dataLoader import data_loader
 
 '''# Function to load the tokenizer and model
 from scripts.fine_tune import fine_tune_lora, fine_tune_with_qlora, full_finetune, finetune_roberta
@@ -39,8 +39,7 @@ def main():
 
     #Load the dataset 
     if args.dataset:
-        if(args.dataset == "yelp"):
-            data = yelp_data_loader.yelp_data_loader()
+            data = data_loader.generic_data_loader(args.dataset)
 
         # select the method to finetune on
     if args.finetune == 'lora':

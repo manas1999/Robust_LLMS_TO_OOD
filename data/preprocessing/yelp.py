@@ -24,7 +24,7 @@ def text_process(example):
     example["text"] = re.sub(" +", " ", example["text"])
     return example
 
-label_mapping = {1:0, 2:0, 3:2, 4:2, 5:1}  # Adjust according to actual dataset label distribution
+label_mapping = {0:0, 4:1, 2:2}  # Adjust according to actual dataset label distribution
 def label_process(example):
     if example["label"] in label_mapping:
         example["label"] = label_mapping[example["label"]]
@@ -40,7 +40,7 @@ def preprocess_yelp():
 
     # Assuming the label column is correctly named 'label'
     dataset = dataset.map(lambda example: {'text': example['text'], 'label': example['label']})
-    dataset = dataset.filter(lambda example: example['label'] in [1, 3, 5])  # Adjust as needed
+    dataset = dataset.filter(lambda example: example["label"] in [0, 2, 4])
     dataset = dataset.map(text_process).map(label_process).shuffle(seed=0)
 
     # Split into train and test
@@ -57,7 +57,7 @@ def preprocess_yelp():
     test_dataset = [{"Text": data['text'], "Label": data['label']} for data in test]
 
     # Save the processed data
-    save_data(train_dataset, "./data/processed/SentimentAnalysis/yelp", "train")
-    save_data(test_dataset, "./data/processed/SentimentAnalysis/yelp", "test")
+    save_data(train_dataset, "./data/processed/yelp", "train")
+    save_data(test_dataset, "./data/processed/yelp", "test")
 
 
