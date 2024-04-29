@@ -2,3 +2,5 @@
 *.pyc
 .DS_Store
 .env
+data/preprocessing/__init__.py
+data/raw/SentimentAnalysis/
