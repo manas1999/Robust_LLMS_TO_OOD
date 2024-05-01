@@ -62,7 +62,6 @@ def finetune_roberta(dataset):
         evaluation_strategy="epoch",
         save_strategy="epoch",
         fp16=torch.cuda.is_available(),  # Enabling this only if CUDA is available
-        callbacks=[WandbCallback()],
     )
 
     # Create and configure the trainer
@@ -70,7 +69,8 @@ def finetune_roberta(dataset):
         model=model,
         args=training_args,
         train_dataset=tokenized_train_dataset,
-        eval_dataset=tokenized_eval_dataset
+        eval_dataset=tokenized_eval_dataset,
+        callbacks=[WandbCallback()],
     )
 
     # Start the training process
@@ -154,7 +154,6 @@ def finetune_t5(dataset):
         evaluation_strategy="epoch",
         save_strategy="epoch",
         fp16=torch.cuda.is_available(),
-        callbacks=[WandbCallback()],
     )
 
     # Create and configure the trainer
@@ -163,6 +162,7 @@ def finetune_t5(dataset):
         args=training_args,
         train_dataset=tokenized_train_dataset,
         eval_dataset=tokenized_eval_dataset,
+        callbacks=[WandbCallback()],
     )
 
     # Start the training process
@@ -248,7 +248,6 @@ def finetune_gpt2(dataset):
         evaluation_strategy="epoch",
         save_strategy="epoch",
         fp16=torch.cuda.is_available(),
-        callbacks=[WandbCallback()],
     )
 
     # Create and configure the trainer
@@ -257,6 +256,7 @@ def finetune_gpt2(dataset):
         args=training_args,
         train_dataset=tokenized_train_dataset,
         eval_dataset=tokenized_eval_dataset,
+        callbacks=[WandbCallback()],
     )
 
     # Start the training process
