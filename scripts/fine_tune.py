@@ -7,6 +7,10 @@ from datasets import Dataset
 import torch
 import logging
 import time
+import wandb
+
+
+
 
 def fine_tune_lora(dataset_path, model,tokenizer, output_dir="./finetuned_model", epochs=3):
 
@@ -154,12 +158,9 @@ def full_finetune(dataset_path, model, tokenizer, output_dir="./full_finetuned",
     trainer.train()
 
 
-
-
 def finetune_roberta(dataset):
-    
-    start_time = time.time()
-
+    wandb.login(key="5035d804b450ae72d3a317de6ddde7e467aab080")
+    wandb.init(project="Robust-LLM", name = "roberta-amazon")
     # Setup the device (CUDA if available)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
@@ -172,10 +173,6 @@ def finetune_roberta(dataset):
     num_labels = len(unique_labels)
     print(f"Detected {num_labels} unique labels.")
     
-    # Tokenize dataset function adjusted for batch processing
-    print("Tokenizing dataset...")
-    tokenize_start_time = time.time()
-    
     def tokenize_function(batch):
         # Use 'text' as per your dataset schema
         texts = [text if text is not None else "" for text in batch['Text']]
@@ -186,38 +183,32 @@ def finetune_roberta(dataset):
         tokenized_inputs['labels'] = labels
         return tokenized_inputs
     
-    # Split dataset into training and evaluation
+    # Split dataset into training and evaluationƒ
     dataset_dict = dataset.train_test_split(test_size=0.1)
 
     # Apply tokenization to training and evaluation datasets
     tokenized_train_dataset = dataset_dict['train'].map(tokenize_function, batched=True)
     tokenized_eval_dataset = dataset_dict['test'].map(tokenize_function, batched=True)
     
-
-    tokenize_end_time = time.time()
-    print(f"Tokenization completed in {tokenize_end_time - tokenize_start_time:.2f} seconds")
-    
     # Load the model and move it to the correct device
     print("Loading model...")
-    model_loading_start_time = time.time()
     model = AutoModelForSequenceClassification.from_pretrained('roberta-base', num_labels=num_labels).to(device)
-    model_loading_end_time = time.time()
-    print(f"Model loaded in {model_loading_end_time - model_loading_start_time:.2f} seconds")
     
     # Define training arguments
     print("Setting up training...")
     training_args = TrainingArguments(
         output_dir='../outputs/roberta/results',
         num_train_epochs=1,
-        per_device_train_batch_size=16,
+        per_device_train_batch_size=32,
         per_device_eval_batch_size=32,
         warmup_steps=500,
         weight_decay=0.01,
         logging_dir='./logs',
-        logging_steps=50,
+        logging_steps=500,
         evaluation_strategy="epoch",
         save_strategy="epoch",
         fp16=torch.cuda.is_available(),  # Enabling this only if CUDA is available
+        callbacks=[WandbCallback()],
     )
 
     # Create and configure the trainer
@@ -230,19 +221,13 @@ def finetune_roberta(dataset):
 
     # Start the training process
     print("Starting training...")
-    training_start_time = time.time()
     trainer.train()
-    training_end_time = time.time()
-    print(f"Training completed in {training_end_time - training_start_time:.2f} seconds")
 
     # Save the model and tokenizer
     print("Saving the model...")
-    save_path = '../outputs/models/roberta_yelp'
+    save_path = '../outputs/models/roberta_amazon'
     model.save_pretrained(save_path)
     tokenizer.save_pretrained(save_path)
-
-    total_time = time.time() - start_time
-    print(f"Total process completed in {total_time:.2f} seconds")
 
     return model
 
