@@ -167,10 +167,6 @@ def finetune_roberta(dataset):
     # Initialize tokenizer from pretrained
     print("Initializing tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained('roberta-base')
-
-    unique_labels = dataset['train']['Label'].unique()
-    num_labels = len(unique_labels)
-    print(f"Detected {num_labels} unique labels.")
     
     # Tokenize dataset function adjusted for batch processing
     print("Tokenizing dataset...")
