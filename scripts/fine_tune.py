@@ -13,7 +13,7 @@ from transformers import GPT2LMHeadModel, GPT2Tokenizer, Trainer, TrainingArgume
 from datasets import load_dataset, DatasetDict
 
 def finetune_roberta(dataset):
-    wandb.login("5035d804b450ae72d3a317de6ddde7e467aab080")
+    wandb.login(key="5035d804b450ae72d3a317de6ddde7e467aab080")
     wandb.init(project="Robust_LLM", name = "Roberta_Finetuning")
     # Setup the device (CUDA if available)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -86,7 +86,7 @@ def finetune_roberta(dataset):
 # Define the finetune function for T5 with Weights & Biases
 def finetune_t5(dataset):
     # Initialize Weights & Biases
-    wandb.login("5035d804b450ae72d3a317de6ddde7e467aab080")
+    wandb.login(key="5035d804b450ae72d3a317de6ddde7e467aab080")
     wandb.init(project="Robust_LLM", name="T5_Finetuning")
 
     # Setup the device (CUDA if available)
@@ -179,7 +179,7 @@ def finetune_t5(dataset):
 # Define the fine-tune function for GPT-2 with Weights & Biases
 def finetune_gpt2(dataset):
     # Initialize Weights & Biases
-    wandb.login()  # Ensure you have logged in with your wandb API key
+    wandb.login(key="5035d804b450ae72d3a317de6ddde7e467aab080")
     wandb.init(project="Robust_LLM", name="GPT2_Finetuning")
 
     # Setup the device (CUDA if available)
