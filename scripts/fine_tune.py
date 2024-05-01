@@ -167,6 +167,10 @@ def finetune_roberta(dataset):
     # Initialize tokenizer from pretrained
     print("Initializing tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained('roberta-base')
+
+    unique_labels = dataset['train']['Label'].unique()
+    num_labels = len(unique_labels)
+    print(f"Detected {num_labels} unique labels.")
     
     # Tokenize dataset function adjusted for batch processing
     print("Tokenizing dataset...")
@@ -196,7 +200,7 @@ def finetune_roberta(dataset):
     # Load the model and move it to the correct device
     print("Loading model...")
     model_loading_start_time = time.time()
-    model = AutoModelForSequenceClassification.from_pretrained('roberta-base', num_labels=2).to(device)
+    model = AutoModelForSequenceClassification.from_pretrained('roberta-base', num_labels=num_labels).to(device)
     model_loading_end_time = time.time()
     print(f"Model loaded in {model_loading_end_time - model_loading_start_time:.2f} seconds")
     
