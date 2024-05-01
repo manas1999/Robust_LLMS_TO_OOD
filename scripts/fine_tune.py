@@ -206,14 +206,14 @@ def finetune_gpt2(dataset):
         # Tokenize the inputs and outputs
         tokenized_inputs = tokenizer(
             input_texts,
-            padding="max_length",
+            padding=True,
             truncation=True,
             max_length=512,
             return_tensors="pt"
         )
         tokenized_labels = tokenizer(
             output_texts,
-            padding="max_length",
+            padding=True,
             truncation=True,
             max_length=16,
             return_tensors="pt"
