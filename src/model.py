@@ -6,7 +6,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModelForSequen
 # from generate_synthetic_data import generate_synthetic_data, data_to_text
 # from inference import test_model, infer
 import argparse
-from scripts.fine_tune import fine_tune_lora, fine_tune_with_qlora, full_finetune, finetune_roberta
+from scripts.fine_tune import finetune_roberta,finetune_t5,finetune_gpt2
 # from inference import infer_langchain, infer_hf, infer, infer_gpt
 # 
 from data.dataLoader import data_loader
@@ -28,7 +28,7 @@ def main():
     parser.add_argument('--model_name', type=str, help='Model name to use', default="bert-base-uncased")
     parser.add_argument('--train_data', type=str, help='Path to the training data file')
     parser.add_argument('--test_data', type=str, help='Path to the test data file')
-    parser.add_argument('--finetune', type=str, choices=['lora', 'qlora', 'full_finetune','finetune_roberta'], help='Choose the fine-tuning method: LoRA, qlora, or full fine-tune')
+    parser.add_argument('--finetune', type=str, choices=['lora', 'qlora', 'full_finetune','finetune_roberta','finetune_t5','finetune_gpt2'], help='Choose the fine-tuning method: LoRA, qlora, or full fine-tune')
     parser.add_argument('--infer', action='store_true', help='Flag to run inference on the model')
     parser.add_argument('--plot_embeddings', action='store_true', help='Flag to plot embeddings')
     parser.add_argument('--dataset', type=str, help='dataset to load')
@@ -53,6 +53,12 @@ def main():
         return
     elif args.finetune == "finetune_roberta":
          finetune_roberta(data)
+         return
+    elif args.finetune == "finetune_t5":
+         finetune_t5(data)
+         return
+    elif args.finetune == "finetune_gpt2":
+         finetune_gpt2(data)
          return
 
 
