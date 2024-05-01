@@ -1,5 +1,6 @@
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, DataCollatorForLanguageModeling, Trainer, TrainingArguments,TextDataset,AutoModelForSequenceClassification
+from transformers import T5ForConditionalGeneration, AutoTokenizer, Trainer, TrainingArguments, WandbCallback
 from peft import prepare_model_for_kbit_training, LoraConfig, get_peft_model
 import pandas as pd
 import numpy as np
@@ -7,159 +8,13 @@ from datasets import Dataset
 import torch
 import logging
 import time
-
-def fine_tune_lora(dataset_path, model,tokenizer, output_dir="./finetuned_model", epochs=3):
-
-    dataset = TextDataset(tokenizer=tokenizer, file_path=dataset_path, block_size=128)
-    data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
-
-    training_args = TrainingArguments(
-        output_dir=output_dir,
-        overwrite_output_dir=True,
-        num_train_epochs=epochs,
-        per_device_train_batch_size=4,
-        save_steps=10_000,
-        save_total_limit=2,
-        prediction_loss_only=True,
-    )
-
-    trainer = Trainer(
-        model=model,
-        args=training_args,
-        data_collator=data_collator,
-        train_dataset=dataset,
-    )
-
-    trainer.train()
-
-# Updated function for fine-tuning with QLoRA
-def fine_tune_with_qlora(dataset_path, model_id, output_dir="./qlora_finetuned", epochs=3):
-    
-
-    # Setup logging
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__)
-
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    def compute_metrics(eval_pred):
-        logits, labels = eval_pred
-        predictions = np.argmax(logits, axis=-1)
-        return {"accuracy": (predictions == labels).mean()}
-    def tokenize_function(examples):
-        return tokenizer(examples["input_text"], truncation=True,max_length=512)
-
-    # Explicitly trust the remote code by setting trust_remote_code=True
-    tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
-    if tokenizer.pad_token is None:
-        print("Setting `pad_token` to `eos_token`:", tokenizer.eos_token)
-        tokenizer.pad_token = tokenizer.eos_token
-
-    # Load the dataset
-    reviews = pd.read_csv('/Users/manasmadine/Desktop/OneDrive/NLP/Project_Experements/EXP_1/Datasets/flipkart_reviews.csv')
-    labels =  pd.read_csv('/Users/manasmadine/Desktop/OneDrive/NLP/Project_Experements/EXP_1/Datasets/flipkart_labels.csv')
-
-    data = Dataset.from_pandas(pd.concat([reviews, labels], axis=1))
-    print(print(data.column_names))
-    
-    tokenized_data = data.map(tokenize_function, batched=True)
-    
-    # Load the model and apply QLoRA configuration
-    model = AutoModelForSequenceClassification.from_pretrained(model_id,num_labels=3, trust_remote_code=True)
-    # Enable gradient checkpointing and prepare for k-bit training
-    model.gradient_checkpointing_enable()
-    model = prepare_model_for_kbit_training(model)
-    config = LoraConfig(
-        r=8, 
-        lora_alpha=32, 
-        target_modules=["query_key_value"], 
-        lora_dropout=0.05, 
-        bias="none", 
-        task_type="SEQUENCE_CLASSIFICATION"
-    )
-    model = get_peft_model(model, config) 
-    model.to(device)
-  
-    training_args = TrainingArguments(
-        output_dir=output_dir,
-        num_train_epochs=3,
-        overwrite_output_dir=True,
-        per_device_train_batch_size=4,
-        save_steps=10_000,
-        save_total_limit=2,
-        prediction_loss_only=True,
-        load_best_model_at_end=True,
-        metric_for_best_model="accuracy",
-        logging_dir=f'{output_dir}/logs',  # Directory for storing logs
-        logging_steps=10,  # Log every 10 steps
-    )
-    
-    trainer = Trainer(
-        model=model,
-        args=training_args,
-        train_dataset=tokenized_data["train"],
-        eval_dataset=tokenized_data["test"],
-        compute_metrics=compute_metrics,
-    )
-    
-    logger.info("Starting training...")
-    trainer.train()
-    logger.info("Training completed.")
-    # Save the fine-tuned model and tokenizer
-
-    model.save_pretrained('/Users/manasmadine/Desktop/OneDrive/NLP/Project_Experements/EXP_1/FineTuned_Models/qlora_finetuned')
-    tokenizer.save_pretrained('/Users/manasmadine/Desktop/OneDrive/NLP/Project_Experements/EXP_1/FineTuned_Models/qlora_finetuned')
-    # Define accuracy metric function
-    def compute_metrics(eval_pred):
-        logits, labels = eval_pred
-        predictions = np.argmax(logits, axis=-1)
-        return {"accuracy": (predictions == labels).mean()}
-
-    
-
-
-
-def full_finetune(dataset_path, model, tokenizer, output_dir="./full_finetuned", epochs=3):
-    # Load the dataset
-    dataset = load_dataset('text', data_files={'train': dataset_path})
-    
-    # Tokenize the dataset
-    def tokenize_function(examples):
-        return tokenizer(examples["input_text"], padding="max_length", truncation=True, max_length=512)
-    
-    tokenized_datasets = dataset.map(tokenize_function, batched=True)
-    
-    # Create a data collator that dynamically pads the inputs received, as well as the labels.
-    data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
-    
-    # Define training arguments
-    training_args = TrainingArguments(
-        output_dir=output_dir,
-        overwrite_output_dir=True,
-        num_train_epochs=epochs,
-        per_device_train_batch_size=4,
-        save_steps=10_000,
-        save_total_limit=2,
-        fp16=True,
-    )
-    
-    # Initialize the Trainer
-    trainer = Trainer(
-        model=model,
-        args=training_args,
-        data_collator=data_collator,
-        train_dataset=tokenized_datasets["train"],
-    )
-    model.config.use_cache = False 
-    # Start fine-tuning           
-    trainer.train()
-
-
-
+import wandb
+from transformers import GPT2LMHeadModel, GPT2Tokenizer, Trainer, TrainingArguments, WandbCallback
+from datasets import load_dataset, DatasetDict
 
 def finetune_roberta(dataset):
-    
-    start_time = time.time()
-
+    wandb.login("5035d804b450ae72d3a317de6ddde7e467aab080")
+    wandb.init(project="Robust_LLM", name = "Roberta_Finetuning")
     # Setup the device (CUDA if available)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
@@ -170,7 +25,6 @@ def finetune_roberta(dataset):
     
     # Tokenize dataset function adjusted for batch processing
     print("Tokenizing dataset...")
-    tokenize_start_time = time.time()
     
     def tokenize_function(batch):
         # Use 'text' as per your dataset schema
@@ -189,23 +43,16 @@ def finetune_roberta(dataset):
     tokenized_train_dataset = dataset_dict['train'].map(tokenize_function, batched=True)
     tokenized_eval_dataset = dataset_dict['test'].map(tokenize_function, batched=True)
     
-
-    tokenize_end_time = time.time()
-    print(f"Tokenization completed in {tokenize_end_time - tokenize_start_time:.2f} seconds")
-    
     # Load the model and move it to the correct device
     print("Loading model...")
-    model_loading_start_time = time.time()
     model = AutoModelForSequenceClassification.from_pretrained('roberta-base', num_labels=3).to(device)
-    model_loading_end_time = time.time()
-    print(f"Model loaded in {model_loading_end_time - model_loading_start_time:.2f} seconds")
     
     # Define training arguments
     print("Setting up training...")
     training_args = TrainingArguments(
         output_dir='../outputs/roberta/results',
         num_train_epochs=1,
-        per_device_train_batch_size=16,
+        per_device_train_batch_size=32,
         per_device_eval_batch_size=32,
         warmup_steps=500,
         weight_decay=0.01,
@@ -214,6 +61,7 @@ def finetune_roberta(dataset):
         evaluation_strategy="epoch",
         save_strategy="epoch",
         fp16=torch.cuda.is_available(),  # Enabling this only if CUDA is available
+        callbacks=[WandbCallback()],
     )
 
     # Create and configure the trainer
@@ -225,24 +73,200 @@ def finetune_roberta(dataset):
     )
 
     # Start the training process
-    print("Starting training...")
-    training_start_time = time.time()
     trainer.train()
-    training_end_time = time.time()
-    print(f"Training completed in {training_end_time - training_start_time:.2f} seconds")
 
     # Save the model and tokenizer
     print("Saving the model...")
-    save_path = '../outputs/models/roberta_yelp'
+    save_path = '../outputs/models/roberta_amazon'
     model.save_pretrained(save_path)
     tokenizer.save_pretrained(save_path)
+    return model
 
-    total_time = time.time() - start_time
-    print(f"Total process completed in {total_time:.2f} seconds")
+
+# Define the finetune function for T5 with Weights & Biases
+def finetune_t5(dataset):
+    # Initialize Weights & Biases
+    wandb.login("5035d804b450ae72d3a317de6ddde7e467aab080")
+    wandb.init(project="Robust_LLM", name="T5_Finetuning")
+
+    # Setup the device (CUDA if available)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+
+    # Initialize tokenizer from pretrained
+    print("Initializing tokenizer...")
+    tokenizer = AutoTokenizer.from_pretrained("t5-base")
+
+    # Tokenize dataset function for T5
+    print("Tokenizing dataset...")
+
+    def tokenize_function(batch):
+        # Convert texts and labels into appropriate input-output sequences for T5
+        texts = [text if text is not None else "" for text in batch['Text']]
+        label_texts = ["positive" if label == 1 else "neutral" if label == 0 else "negative" for label in batch['Label']]
+
+        inputs = [f"classify: {text}" for text in texts]
+        outputs = [f"{label}" for label in label_texts]
+        
+        # Tokenize inputs
+        tokenized_inputs = tokenizer(
+            inputs,
+            padding="max_length",
+            truncation=True,
+            max_length=512,
+            return_tensors="pt"
+        )
+        # Tokenize labels (outputs)
+        tokenized_labels = tokenizer(
+            outputs,
+            padding="max_length",
+            truncation=True,
+            max_length=16,
+            return_tensors="pt"
+        )
+        # Attach labels to inputs for training
+        tokenized_inputs["labels"] = tokenized_labels["input_ids"]
+        return tokenized_inputs
+
+    # Split dataset into training and evaluation
+    dataset_dict = dataset.train_test_split(test_size=0.1)
+
+    # Apply tokenization to training and evaluation datasets
+    tokenized_train_dataset = dataset_dict['train'].map(tokenize_function, batched=True)
+    tokenized_eval_dataset = dataset_dict['test'].map(tokenize_function, batched=True)
+
+    # Load the T5 model and move it to the correct device
+    print("Loading model...")
+    model = T5ForConditionalGeneration.from_pretrained("t5-base").to(device)
+
+    # Define training arguments with Weights & Biases callback
+    print("Setting up training...")
+    training_args = TrainingArguments(
+        output_dir='../outputs/t5/results',
+        num_train_epochs=1,
+        per_device_train_batch_size=32,
+        per_device_eval_batch_size=32,
+        warmup_steps=500,
+        weight_decay=0.01,
+        logging_dir='./logs',
+        logging_steps=50,
+        evaluation_strategy="epoch",
+        save_strategy="epoch",
+        fp16=torch.cuda.is_available(),
+        callbacks=[WandbCallback()],
+    )
+
+    # Create and configure the trainer
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        train_dataset=tokenized_train_dataset,
+        eval_dataset=tokenized_eval_dataset,
+    )
+
+    # Start the training process
+    trainer.train()
+
+    # Save the model and tokenizer
+    print("Saving the model...")
+    save_path = '../outputs/models/t5_sentiment'
+    model.save_pretrained(save_path)
+    tokenizer.save_pretrained(save_path)
 
     return model
 
 
+# Define the fine-tune function for GPT-2 with Weights & Biases
+def finetune_gpt2(dataset):
+    # Initialize Weights & Biases
+    wandb.login()  # Ensure you have logged in with your wandb API key
+    wandb.init(project="Robust_LLM", name="GPT2_Finetuning")
 
+    # Setup the device (CUDA if available)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+
+    # Initialize tokenizer from pretrained
+    print("Initializing tokenizer...")
+    tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+    tokenizer.pad_token = tokenizer.eos_token  # Set pad_token to EOS to avoid issues with GPT-2
+
+    # Tokenization function for GPT-2
+    print("Tokenizing dataset...")
+
+    def tokenize_function(batch):
+        texts = [text if text is not None else "" for text in batch['Text']]
+        label_texts = ["positive" if label == 1 else "neutral" if label == 0 else "negative" for label in batch['Label']]
+
+        # Prepare input-output text for GPT-2
+        input_texts = [f"Text: {text} | Sentiment:" for text in texts]
+        output_texts = [f" {label}" for label in label_texts]
+
+        # Tokenize the inputs and outputs
+        tokenized_inputs = tokenizer(
+            input_texts,
+            padding="max_length",
+            truncation=True,
+            max_length=512,
+            return_tensors="pt"
+        )
+        tokenized_labels = tokenizer(
+            output_texts,
+            padding="max_length",
+            truncation=True,
+            max_length=16,
+            return_tensors="pt"
+        )
+
+        # Append labels to inputs for GPT-2
+        tokenized_inputs["labels"] = tokenized_labels["input_ids"]
+        return tokenized_inputs
+
+    # Split dataset into training and evaluation
+    dataset_dict = dataset.train_test_split(test_size=0.1)
+
+    # Apply tokenization to training and evaluation datasets
+    tokenized_train_dataset = dataset_dict['train'].map(tokenize_function, batched=True)
+    tokenized_eval_dataset = dataset_dict['test'].map(tokenize_function, batched=True)
+
+    # Load the GPT-2 model and move it to the correct device
+    print("Loading model...")
+    model = GPT2LMHeadModel.from_pretrained("gpt2").to(device)
+
+    # Define training arguments with Weights & Biases callback
+    print("Setting up training...")
+    training_args = TrainingArguments(
+        output_dir='../outputs/gpt2/results',
+        num_train_epochs=1,
+        per_device_train_batch_size=32,
+        per_device_eval_batch_size=32,
+        warmup_steps=500,
+        weight_decay=0.01,
+        logging_dir='./logs',
+        logging_steps=50,
+        evaluation_strategy="epoch",
+        save_strategy="epoch",
+        fp16=torch.cuda.is_available(),
+        callbacks=[WandbCallback()],
+    )
+
+    # Create and configure the trainer
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        train_dataset=tokenized_train_dataset,
+        eval_dataset=tokenized_eval_dataset,
+    )
+
+    # Start the training process
+    trainer.train()
+
+    # Save the model and tokenizer
+    print("Saving the model...")
+    save_path = '../outputs/models/gpt2_sentiment'
+    model.save_pretrained(save_path)
+    tokenizer.save_pretrained(save_path)
+
+    return model
 
 
