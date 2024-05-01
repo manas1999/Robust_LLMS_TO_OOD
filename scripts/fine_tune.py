@@ -1,6 +1,6 @@
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, DataCollatorForLanguageModeling, Trainer, TrainingArguments,TextDataset,AutoModelForSequenceClassification
-from transformers import T5ForConditionalGeneration, AutoTokenizer, Trainer, TrainingArguments, WandbCallback
+from transformers import T5ForConditionalGeneration, AutoTokenizer, Trainer, TrainingArguments
 from peft import prepare_model_for_kbit_training, LoraConfig, get_peft_model
 import pandas as pd
 import numpy as np
@@ -9,7 +9,7 @@ import torch
 import logging
 import time
 import wandb
-from transformers import GPT2LMHeadModel, GPT2Tokenizer, Trainer, TrainingArguments, WandbCallback
+from transformers import GPT2LMHeadModel, GPT2Tokenizer, Trainer, TrainingArguments
 from datasets import load_dataset, DatasetDict
 
 def finetune_roberta(dataset):
@@ -153,6 +153,7 @@ def finetune_t5(dataset):
         evaluation_strategy="epoch",
         save_strategy="epoch",
         fp16=torch.cuda.is_available(),
+        callbacks=[WandbCallback()],
     )
 
     # Create and configure the trainer
