@@ -153,7 +153,6 @@ def finetune_t5(dataset):
         evaluation_strategy="epoch",
         save_strategy="epoch",
         fp16=torch.cuda.is_available(),
-        callbacks=[WandbCallback()],
     )
 
     # Create and configure the trainer
