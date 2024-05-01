@@ -12,6 +12,8 @@ import wandb
 from transformers.integrations import WandbCallback
 from transformers import GPT2LMHeadModel, GPT2Tokenizer, Trainer, TrainingArguments
 from datasets import load_dataset, DatasetDict
+from transformers import default_data_collator
+
 
 def finetune_roberta(dataset):
     wandb.login(key="5035d804b450ae72d3a317de6ddde7e467aab080")
@@ -104,7 +106,7 @@ def finetune_t5(dataset):
     def tokenize_function(batch):
         # Convert texts and labels into appropriate input-output sequences for T5
         texts = [text if text is not None else "" for text in batch['Text']]
-        label_texts = ["positive" if label == 1 else "neutral" if label == 0 else "negative" for label in batch['Label']]
+        label_texts = ["positive" if label == 1 else "negative" if label == 0 else "neutral" for label in batch['Label']]
 
         inputs = [f"classify: {text}" for text in texts]
         outputs = [f"{label}" for label in label_texts]
@@ -197,7 +199,7 @@ def finetune_gpt2(dataset):
 
     def tokenize_function(batch):
         texts = [text if text is not None else "" for text in batch['Text']]
-        label_texts = ["positive" if label == 1 else "neutral" if label == 0 else "negative" for label in batch['Label']]
+        label_texts = ["positive" if label == 1 else "negative" if label == 0 else "neutral" for label in batch['Label']]
 
         # Prepare input-output text for GPT-2
         input_texts = [f"Text: {text} | Sentiment:" for text in texts]
@@ -218,6 +220,8 @@ def finetune_gpt2(dataset):
             max_length=16,
             return_tensors="pt"
         )
+        if tokenized_labels["input_ids"].nelement() == 0:
+            print("Warning: Empty labels encountered")
 
         # Append labels to inputs for GPT-2
         tokenized_inputs["labels"] = tokenized_labels["input_ids"]
@@ -256,6 +260,7 @@ def finetune_gpt2(dataset):
         args=training_args,
         train_dataset=tokenized_train_dataset,
         eval_dataset=tokenized_eval_dataset,
+        data_collator=default_data_collator,  # Ensures proper batching
         callbacks=[WandbCallback()],
     )
 
