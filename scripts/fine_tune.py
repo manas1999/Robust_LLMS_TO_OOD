@@ -51,7 +51,7 @@ def finetune_roberta(dataset):
     print("Setting up training...")
     training_args = TrainingArguments(
         output_dir='../outputs/roberta/results',
-        num_train_epochs=1,
+        num_train_epochs=5,
         per_device_train_batch_size=32,
         per_device_eval_batch_size=32,
         warmup_steps=500,
@@ -143,7 +143,7 @@ def finetune_t5(dataset):
     print("Setting up training...")
     training_args = TrainingArguments(
         output_dir='../outputs/t5/results',
-        num_train_epochs=1,
+        num_train_epochs=5,
         per_device_train_batch_size=32,
         per_device_eval_batch_size=32,
         warmup_steps=500,
@@ -237,7 +237,7 @@ def finetune_gpt2(dataset):
     print("Setting up training...")
     training_args = TrainingArguments(
         output_dir='../outputs/gpt2/results',
-        num_train_epochs=1,
+        num_train_epochs=5,
         per_device_train_batch_size=32,
         per_device_eval_batch_size=32,
         warmup_steps=500,
