@@ -155,6 +155,7 @@ def finetune_t5(dataset):
         logging_steps=50,
         evaluation_strategy="epoch",
         save_strategy="epoch",
+        gradient_clip_val=1.0,
         fp16=torch.cuda.is_available(),
     )
 
