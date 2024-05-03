@@ -18,11 +18,9 @@ def generic_data_loader(dataset_name):
     # Read the TSV files
     test_df = pd.read_csv(test_file_path, sep='\t')
     train_df = pd.read_csv(train_file_path, sep='\t')
+
+    # Convert pandas DataFrame to Hugging Face dataset
+    train_dataset = Dataset.from_pandas(test_df)
+    test_dataset = Dataset.from_pandas(train_df)
     
-    # Concatenate test and train data frames if necessary
-    # Note: You may need to adjust this if test and train need to be kept separate
-    dataset = pd.concat([train_df, test_df]).reset_index(drop=True)
-    
-    # Convert the pandas dataframe to a HuggingFace dataset
-    hf_dataset = Dataset.from_pandas(dataset)
-    return hf_dataset
+    return train_dataset, test_dataset
