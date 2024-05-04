@@ -26,9 +26,15 @@ def text_process(example):
 
 label_mapping = {0:0, 4:1, 2:2}  # Adjust according to actual dataset label distribution
 def label_process(example):
-    if example["label"] in label_mapping:
-        example["label"] = label_mapping[example["label"]]
+    example["label"] = label_mapping[example["label"]]
     return example
+def print_dataset_info(train_data, test_data):
+    print("Number of train samples:", len(train_data))
+    print("Number of test samples:", len(test_data))
+    train_label_counts = np.unique([data['Label'] for data in train_data], return_counts=True)
+    test_label_counts = np.unique([data['Label'] for data in test_data], return_counts=True)
+    print("Labels in train set:", dict(zip(train_label_counts[0], train_label_counts[1])))
+    print("Labels in test set:", dict(zip(test_label_counts[0], test_label_counts[1])))
 
 def preprocess_yelp():
     set_seed(0)
@@ -38,8 +44,7 @@ def preprocess_yelp():
     # Check the column names
     print(dataset['train'].column_names)  # This will help confirm the correct label column name
 
-    # Assuming the label column is correctly named 'label'
-    dataset = dataset.map(lambda example: {'text': example['text'], 'label': example['label']})
+    # Filtering and mapping labels
     dataset = dataset.filter(lambda example: example["label"] in [0, 2, 4])
     dataset = dataset.map(text_process).map(label_process).shuffle(seed=0)
 
@@ -52,12 +57,21 @@ def preprocess_yelp():
         train = train_test_split['train']
         test = train_test_split['test']
 
-    # Prepare datasets for saving
-    train_dataset = [{"Text": data['text'], "Label": data['label']} for data in train]
+    # Manually set max_length
+    max_length = 50000
+    label_count = {0:0, 1:0, 2:0}
+
+    # Preparing limited train dataset
+    train_dataset = []
+    for data in train:
+        if label_count[data["label"]] < max_length:
+            train_dataset.append({"Text": data['text'], "Label": data['label']})
+            label_count[data["label"]] += 1
+
+    # Preparing test dataset
     test_dataset = [{"Text": data['text'], "Label": data['label']} for data in test]
 
     # Save the processed data
-    save_data(train_dataset, "./data/processed/yelp", "train")
-    save_data(test_dataset, "./data/processed/yelp", "test")
-
-
+    save_data(train_dataset, "./data/processed/yelp_full", "train")
+    save_data(test_dataset, "./data/processed/yelp_full", "test")
+    print_dataset_info(train_dataset, test_dataset)

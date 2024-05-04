@@ -6,11 +6,12 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModelForSequen
 # from generate_synthetic_data import generate_synthetic_data, data_to_text
 # from inference import test_model, infer
 import argparse
-from Prompts.Zero_shot_Prompting import main_zero_shot_fucntion
+from Prompts.Zero_shot_Prompting import main_zero_shot_fucntion,run_sentiment_analysis_on_all_datasets
 from scripts.fine_tune import finetune_roberta,finetune_t5,finetune_gpt2
 # from inference import infer_langchain, infer_hf, infer, infer_gpt
 # 
 from data.dataLoader import data_loader
+from data.preprocessing import yelp,flipkart
 
 '''# Function to load the tokenizer and model
 from scripts.fine_tune import fine_tune_lora, fine_tune_with_qlora, full_finetune, finetune_roberta
@@ -39,12 +40,12 @@ def main():
 
     args = parser.parse_args()
 
+
      ## for prompting
     if args.prompt_type == 'zero_shot_prompt':
-        main_zero_shot_fucntion("imdb","llama_70b")
-        return
+        run_sentiment_analysis_on_all_datasets("llama_70b")
+        return 
     
-
     #Load the dataset 
     if args.dataset:
             data = data_loader.generic_data_loader(args.dataset)
