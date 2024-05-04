@@ -1,0 +1,7 @@
+Dataset,Accuracy
+amazon,1.0
+dynasent,1.0
+sst5,1.0
+yelp,1.0
+imdb,1.0
+semeval,0.0
