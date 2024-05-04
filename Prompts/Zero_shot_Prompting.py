@@ -118,7 +118,7 @@ def run_sentiment_analysis_on_all_datasets(model_name):
     
     # Save results to CSV
     
-    results_df.to_csv('./Prompts/resultssentiment_analysis_results.csv', index=False)
-    print("Results saved to /mnt/data/sentiment_analysis_results.csv")
+    results_df.to_csv('./Prompts/results/sentiment_analysis_results.csv', index=False)
+    print("Results saved to sentiment_analysis_results.csv")
     
     return results_df
