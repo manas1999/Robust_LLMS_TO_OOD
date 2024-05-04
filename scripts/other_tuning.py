@@ -6,12 +6,15 @@ import numpy as np
 from datasets import Dataset
 import torch
 import logging
+from transformers import AutoTokenizer, AutoModelForCausalLM,BertForSequenceClassification
 import time
 import wandb
 
 
-def fine_tune_lora(dataset_path, model,tokenizer, output_dir="./finetuned_model", epochs=3):
 
+def fine_tune_lora(dataset_path, model_name, output_dir="./finetuned_model", epochs=3):
+    model = BertForSequenceClassification.from_pretrained(model_name, num_labels=3)
+    tokenizer = AutoTokenizer.from_pretrained(model)
     dataset = TextDataset(tokenizer=tokenizer, file_path=dataset_path, block_size=128)
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
@@ -120,7 +123,9 @@ def fine_tune_with_qlora(dataset_path, model_id, output_dir="./qlora_finetuned",
 
 
 
-def full_finetune(dataset_path, model, tokenizer, output_dir="./full_finetuned", epochs=3):
+def full_finetune(dataset_path, model, output_dir="./full_finetuned", epochs=3):
+    model = BertForSequenceClassification.from_pretrained(model, num_labels=3)
+    tokenizer = AutoTokenizer.from_pretrained(model)
     # Load the dataset
     dataset = load_dataset('text', data_files={'train': dataset_path})
     
