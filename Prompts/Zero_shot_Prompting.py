@@ -63,9 +63,9 @@ def process_batch(data_batch, model):
                 'prompt_format_string': '<human>: {prompt}\n'
             }
             predicted_label, remaining_requests, remaining_seconds = inference(json)
-            print("Prompt:", prompt)
-            print("Predicted Label:", predicted_label)
-            print('-' * 50)
+            #print("Prompt:", prompt)
+            #print("Predicted Label:", predicted_label)
+            #print('-' * 50)
             prediction_df_rows.append({'prompt': prompt, 'predicted_label': predicted_label, 'actual_label': row['actual_label']})
             time.sleep(1)  # Rate limit handling
 
@@ -78,6 +78,7 @@ def process_batch(data_batch, model):
 def main_zero_shot_fucntion(dataset_name, model_name):
     ## loading the dataset 
     _, test_dataset = data_loader.generic_data_loader(dataset_name)
+    #data = test_dataset.to_pandas().sample(n=10, random_state=1)
 
     ## converting to pandas dataframe 
     data = test_dataset.to_pandas()
@@ -95,9 +96,28 @@ def main_zero_shot_fucntion(dataset_name, model_name):
     prediction_data['predicted_label'] = prediction_data['predicted_label'].str.lower().str.strip()
     prediction_data['actual_label'] = prediction_data['actual_label'].str.lower().str.strip()
     prediction_data['Match'] = np.where(prediction_data['predicted_label'] == prediction_data['actual_label'],1,0)
-    print("prediction_data['Match'].sum()", prediction_data['Match'].sum())
-    print("data_final.shape[0]", prediction_data.shape[0])
+    #print("prediction_data['Match'].sum()", prediction_data['Match'].sum())
+    #print("data_final.shape[0]", prediction_data.shape[0])
     accuracy = prediction_data['Match'].sum()/prediction_data.shape[0]
     print("accuracy of the model:" , accuracy)
+    return accuracy
 
     
+def run_sentiment_analysis_on_all_datasets(model_name):
+    datasets = ['amazon', 'dynasent', 'sst5', 'yelp']
+    results = []
+    
+    for dataset in datasets:
+        accuracy = main_zero_shot_fucntion(dataset, model_name)
+        results.append({'Dataset': dataset, 'Accuracy': accuracy})
+        print(f"Completed {dataset} with accuracy: {accuracy:.2%}")
+
+    # Convert results to DataFrame
+    results_df = pd.DataFrame(results)
+    
+    # Save results to CSV
+    
+    results_df.to_csv('./Prompts/resultssentiment_analysis_results.csv', index=False)
+    print("Results saved to /mnt/data/sentiment_analysis_results.csv")
+    
+    return results_df
