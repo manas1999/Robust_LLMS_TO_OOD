@@ -6,6 +6,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModelForSequen
 # from generate_synthetic_data import generate_synthetic_data, data_to_text
 # from inference import test_model, infer
 import argparse
+from Prompts.Zero_shot_Prompting import main_zero_shot_fucntion
 from scripts.fine_tune import finetune_roberta,finetune_t5,finetune_gpt2
 # from inference import infer_langchain, infer_hf, infer, infer_gpt
 # 
@@ -32,10 +33,17 @@ def main():
     parser.add_argument('--infer', action='store_true', help='Flag to run inference on the model')
     parser.add_argument('--plot_embeddings', action='store_true', help='Flag to plot embeddings')
     parser.add_argument('--dataset', type=str, help='dataset to load')
+    parser.add_argument('--prompt_type', type=str, choices= ['zero_shot_prompt','k_shot_prompt'])
 
 
 
     args = parser.parse_args()
+
+     ## for prompting
+    if args.prompt_type == 'zero_shot_prompt':
+        main_zero_shot_fucntion("imdb","llama_70b")
+        return
+    
 
     #Load the dataset 
     if args.dataset:
@@ -80,6 +88,9 @@ def main():
         elif args.infer[0] == 'hf':
             infer_hf(args.infer[1])
             return
+        
+   
+    
 
 
     # Load the tokenizer and model
