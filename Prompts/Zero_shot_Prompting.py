@@ -78,10 +78,11 @@ def process_batch(data_batch, model):
 def main_zero_shot_fucntion(dataset_name, model_name):
     ## loading the dataset 
     _, test_dataset = data_loader.generic_data_loader(dataset_name)
-    #data = test_dataset.to_pandas().sample(n=10, random_state=1)
-
+    
     ## converting to pandas dataframe 
-    data = test_dataset.to_pandas()
+    ## DOWNSAMPLING 
+    data = test_dataset.to_pandas().sample(n=1000, random_state=1)
+    #data = test_dataset.to_pandas()
 
     ## changing labels column format 
     label_map = {0: 'negative', 1: 'positive', 2: 'neutral'}
@@ -104,7 +105,7 @@ def main_zero_shot_fucntion(dataset_name, model_name):
 
     
 def run_sentiment_analysis_on_all_datasets(model_name):
-    datasets = ['amazon', 'dynasent', 'sst5', 'yelp']
+    datasets = ['amazon', 'dynasent', 'sst5', 'yelp','imdb','semeval']
     results = []
     
     for dataset in datasets:
