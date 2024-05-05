@@ -31,7 +31,7 @@ def main():
         run_CoT_on_all_datasets("llama_70b")
         return
     elif args.prompt_type == 'rewrite_reviews':
-         rewrite_reviews("amazon","llama_70b")
+         rewrite_reviews("sst5","llama_70b")
          return
     
     #Load the dataset 

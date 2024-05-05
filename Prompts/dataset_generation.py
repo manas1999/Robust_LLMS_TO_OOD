@@ -75,7 +75,7 @@ def rewrite_reviews(dataset_name, model_name):
     print(f"Rewritten data saved to {dataset_name}_rewritten.csv")
 
 def run_rewriting_on_datasets():
-    datasets = ['amazon', 'sst5']
+    datasets = ['sst5','amazon']
     for dataset in datasets:
         rewrite_reviews(dataset, 'llama_70b')
         print(f"Completed rewriting for {dataset}.")
