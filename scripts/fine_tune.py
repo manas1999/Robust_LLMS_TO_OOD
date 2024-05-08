@@ -15,7 +15,7 @@ from datasets import load_dataset, DatasetDict
 from transformers import default_data_collator
 
 
-def finetune_roberta(dataset):
+def finetune_roberta(dataset,batch_size):
     wandb.login(key="5035d804b450ae72d3a317de6ddde7e467aab080")
     wandb.init(project="Robust_LLM", name = "Roberta_Finetuning")
     # Setup the device (CUDA if available)
@@ -55,8 +55,8 @@ def finetune_roberta(dataset):
     training_args = TrainingArguments(
         output_dir='../outputs/roberta/results',
         num_train_epochs=5,
-        per_device_train_batch_size=32,
-        per_device_eval_batch_size=32,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size,
         warmup_steps=500,
         weight_decay=0.01,
         logging_dir='./logs',
@@ -91,7 +91,7 @@ def finetune_roberta(dataset):
 
 
 # Define the finetune function for T5 with Weights & Biases
-def finetune_t5(dataset):
+def finetune_t5(dataset,batch_size):
     # Initialize Weights & Biases
     wandb.login(key="5035d804b450ae72d3a317de6ddde7e467aab080")
     wandb.init(project="Robust_LLM", name="T5_Finetuning")
@@ -151,8 +151,8 @@ def finetune_t5(dataset):
     training_args = TrainingArguments(
         output_dir='../outputs/t5/results',
         num_train_epochs=5,
-        per_device_train_batch_size=32,
-        per_device_eval_batch_size=32,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size,
         warmup_steps=500,
         weight_decay=0.01,
         logging_dir='./logs',
@@ -188,7 +188,7 @@ def finetune_t5(dataset):
 
 
 # Define the fine-tune function for GPT-2 with Weights & Biases
-def finetune_gpt2(dataset):
+def finetune_gpt2(dataset,batch_size):
     # Initialize Weights & Biases
     wandb.login(key="5035d804b450ae72d3a317de6ddde7e467aab080")
     wandb.init(project="Robust_LLM", name="GPT2_Finetuning")
@@ -251,8 +251,8 @@ def finetune_gpt2(dataset):
     training_args = TrainingArguments(
         output_dir='../outputs/gpt2/results',
         num_train_epochs=5,
-        per_device_train_batch_size=32,
-        per_device_eval_batch_size=32,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size,
         warmup_steps=500,
         weight_decay=0.01,
         logging_dir='./logs',
