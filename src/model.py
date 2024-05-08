@@ -36,7 +36,7 @@ def main():
     
     #Load the dataset 
     if args.dataset:
-            data = data_loader.generic_data_loader(args.dataset)
+            _ , data = data_loader.generic_data_loader(args.dataset)
 
         # select the method to finetune on
     if args.finetune == 'lora':
