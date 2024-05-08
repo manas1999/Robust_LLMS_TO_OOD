@@ -20,6 +20,7 @@ def main():
     parser.add_argument('--plot_embeddings', action='store_true', help='Flag to plot embeddings')
     parser.add_argument('--dataset', type=str, help='dataset to load')
     parser.add_argument('--prompt_type', type=str, choices= ['zero_shot_prompt','k_shot_prompt','CoT','rewrite_reviews'])
+    parser.add_argument('--batch_size', type=int)
 
     args = parser.parse_args()
 
@@ -49,13 +50,13 @@ def main():
         full_finetune("train_dataset.txt", args.model_name)
         return
     elif args.finetune == "finetune_roberta":
-         finetune_roberta(data)
+         finetune_roberta(data,args.batch_size)
          return
     elif args.finetune == "finetune_t5":
-         finetune_t5(data)
+         finetune_t5(data,args.batch_size)
          return
     elif args.finetune == "finetune_gpt2":
-         finetune_gpt2(data)
+         finetune_gpt2(data,args.batch_size)
          return
 
 if __name__ == "__main__":
