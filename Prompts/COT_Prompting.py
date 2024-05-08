@@ -84,10 +84,20 @@ def process_batch(data_batch, model):
 
 
 def format_prediction(text):
-    # Split the text to separate the sentiment part and the explanation part
-    sentiment_part, explanation_part = text.split('Explanation:')
+    # Initialize the reason as an empty string in case 'Explanation:' is not found
+    reason = ""
+    
+    # Try to split the text to separate the sentiment part from the explanation part
+    parts = text.split('Explanation:')
+    sentiment_part = parts[0]
+    
+    # If there is an 'Explanation:' part, update the reason
+    if len(parts) > 1:
+        reason = parts[1].strip()
+    
+    # Extract the sentiment part after 'Sentiment:'
     sentiment = sentiment_part.split('Sentiment:')[-1].strip()
-    reason = explanation_part.strip()
+    
     return sentiment, reason
 
 
