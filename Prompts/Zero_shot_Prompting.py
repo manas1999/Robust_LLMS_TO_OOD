@@ -87,7 +87,7 @@ def main_zero_shot_fucntion(dataset_name, model_name):
     
     ## converting to pandas dataframe 
     ## DOWNSAMPLING 
-    data = test_dataset.to_pandas().sample(n=1000, random_state=1)
+    data = test_dataset.to_pandas().sample(n=10, random_state=1)
     #data = test_dataset.to_pandas()
 
     ## changing labels column format 

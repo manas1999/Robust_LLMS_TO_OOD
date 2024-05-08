@@ -107,7 +107,7 @@ def CoT(dataset_name, model_name):
 
     # converting to pandas dataframe
     #DOWNSAMPLE TO 1K points
-    data = test_dataset.to_pandas().sample(n=1000, random_state=1)
+    data = test_dataset.to_pandas().sample(n=10, random_state=1)
     #data = test_dataset.to_pandas()
 
     # for testing take subset of data
