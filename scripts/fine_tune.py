@@ -83,6 +83,10 @@ def finetune_roberta(dataset):
     save_path = '../outputs/models/roberta_amazon'
     model.save_pretrained(save_path)
     tokenizer.save_pretrained(save_path)
+    
+    artifact = wandb.Artifact('roberta_model', type='model')
+    artifact.add_dir(save_path)
+    wandb.log_artifact(artifact)
     return model
 
 
@@ -176,6 +180,9 @@ def finetune_t5(dataset):
     save_path = '../outputs/models/t5_sentiment'
     model.save_pretrained(save_path)
     tokenizer.save_pretrained(save_path)
+    artifact = wandb.Artifact('roberta_model', type='model')
+    artifact.add_dir(save_path)
+    wandb.log_artifact(artifact)
 
     return model
 
@@ -273,6 +280,9 @@ def finetune_gpt2(dataset):
     save_path = '../outputs/models/gpt2_sentiment'
     model.save_pretrained(save_path)
     tokenizer.save_pretrained(save_path)
+    artifact = wandb.Artifact('roberta_model', type='model')
+    artifact.add_dir(save_path)
+    wandb.log_artifact(artifact)
 
     return model
 
