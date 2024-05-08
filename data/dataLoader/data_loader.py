@@ -19,8 +19,8 @@ def generic_data_loader(dataset_name):
     test_df = pd.read_csv(test_file_path, sep='\t')
     train_df = pd.read_csv(train_file_path, sep='\t')
 
-    # Convert pandas DataFrame to Hugging Face dataset
-    train_dataset = Dataset.from_pandas(test_df)
-    test_dataset = Dataset.from_pandas(train_df)
+    # Correctly assign datasets to their respective variables
+    train_dataset = Dataset.from_pandas(train_df)
+    test_dataset = Dataset.from_pandas(test_df)
     
     return train_dataset, test_dataset

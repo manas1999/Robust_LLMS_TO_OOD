@@ -16,28 +16,34 @@ model_map = {"gemma_2b": "google/gemma-2b-it",
              }
 
 
-def inference(json):
-        res = requests.post(endpoint, json=json, headers={
-            "Authorization": f"Bearer {TOGETHER_API_KEY}"
-        })
+def inference(json, retries=3):
+    for attempt in range(retries):
         try:
-            res.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
+            res = requests.post(endpoint, json=json, headers={"Authorization": f"Bearer {TOGETHER_API_KEY}"})
+            res.raise_for_status()
             response_headers = res.headers
             prediction = res.json()['output']['choices'][0]['text']
-            remaining_requests = response_headers['x-ratelimit-remaining']
-            remaining_seconds = response_headers['x-ratelimit-reset']
+            remaining_requests = response_headers.get('x-ratelimit-remaining', 'N/A')
+            reset_time = int(response_headers.get('x-ratelimit-reset', 60))
+            
+            if remaining_requests == '0':
+                print(f"Sleeping until rate limit resets in {reset_time} seconds.")
+                time.sleep(reset_time + 0.5)
+
+            return prediction, remaining_requests, reset_time
         except requests.exceptions.HTTPError as err:
-            print(f"HTTP error occurred: {err}")
-            prediction = "HTTP error from API"
-            remaining_requests = "N/A"
-            remaining_seconds = "N/A"
+            if res.status_code == 429:
+                reset_time = int(response_headers.get('x-ratelimit-reset', 60))
+                print(f"Rate limit exceeded. Retrying in {reset_time} seconds.")
+                time.sleep(reset_time + 0.5)
+            else:
+                print(f"HTTP error occurred: {err}")
+                return "HTTP error from API", "N/A", "N/A"
         except Exception as e:
             print(f"An error occurred: {e}")
-            prediction = "Error from API"
-            remaining_requests = "N/A"
-            remaining_seconds = "N/A"
-    
-        return prediction, remaining_requests, remaining_seconds
+            return "Error from API", "N/A", "N/A"
+
+    return "Failed after retries", "N/A", "N/A"
 
 def process_batch(data_batch, model):
         prediction_df_rows = []
