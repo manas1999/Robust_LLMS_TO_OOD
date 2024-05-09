@@ -8,6 +8,7 @@ from Prompts.dataset_generation import rewrite_reviews
 from scripts.fine_tune import finetune_roberta,finetune_t5,finetune_gpt2
 from scripts.other_tuning import fine_tune_lora,fine_tune_with_qlora,full_finetune
 from data.dataLoader import data_loader
+from data.subSampling import subsample_and_save
 
 
 def main():
@@ -21,6 +22,7 @@ def main():
     parser.add_argument('--dataset', type=str, help='dataset to load')
     parser.add_argument('--prompt_type', type=str, choices= ['zero_shot_prompt','k_shot_prompt','CoT','rewrite_reviews'])
     parser.add_argument('--batch_size', type=int)
+    parser.add_argument('--subSample', type=str)
 
     args = parser.parse_args()
 
@@ -34,6 +36,13 @@ def main():
     elif args.prompt_type == 'rewrite_reviews':
          rewrite_reviews("sst5","llama_70b")
          return
+    
+    if args.subSample:
+        total_samples, samples_per_label, subsample_file_path = subsample_and_save(args.subSample)
+        print(f"Total samples in subsample: {total_samples}")
+        print(f"Samples per label:\n{samples_per_label}")
+        print(f"Subsampled data saved to: {subsample_file_path}")
+        return 
     
     #Load the dataset 
     if args.dataset:
