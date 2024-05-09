@@ -11,7 +11,6 @@ def subsample_and_save(dataset_name):
     test_df = test_df.to_pandas()
     
     # Step 1: Filter sentences with word count between 20 and 70
-    test_df['word_count'] = test_df['Text'].apply(lambda x: len(x.split()))
     filtered_df = test_df
     
     # Step 2: Subsample the data
@@ -19,7 +18,7 @@ def subsample_and_save(dataset_name):
     for label in [1, 0, 2]:
         label_df = filtered_df[filtered_df['Label'] == label]
         if len(label_df) >= 300:
-            sampled_dfs.append(label_df.sample(n=1000, random_state=42))
+            sampled_dfs.append(label_df.sample(n=300, random_state=42))
         else:
             print(f"Not enough samples in label {label}. Only {len(label_df)} available.")
     
