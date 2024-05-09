@@ -34,11 +34,3 @@ def subsample_and_save(dataset_name):
     samples_per_label = final_sample['Label'].value_counts()
     
     return total_samples, samples_per_label, subsample_file_path
-
-# Usage Example
-total_samples, samples_per_label, subsample_file_path = subsample_and_save('amazon')
-print(f"Total samples in subsample: {total_samples}")
-print(f"Samples per label:\n{samples_per_label}")
-print(f"Subsampled data saved to: {subsample_file_path}")
-
-
