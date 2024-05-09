@@ -107,7 +107,7 @@ def CoT(dataset_name, model_name):
     return accuracy
 
 def run_CoT_on_all_datasets(model_name):
-    datasets = ['amazon', 'dynasent', 'sst5', 'yelp', 'imdb', 'semeval']
+    datasets = ['amazon_subsample', 'dynasent_subsample', 'sst5_subsample', 'yelp_subsample', 'imdb_subsample', 'semeval_subsample']
     results = []
     
     for dataset in datasets:
