@@ -73,7 +73,7 @@ def main_zero_shot_fucntion(dataset_name, model_name):
     _, test_dataset = data_loader.generic_data_loader(dataset_name)
     
     # Downsample the dataset
-    data = test_dataset.to_pandas().sample(n=10, random_state=1)
+    data = test_dataset.to_pandas()
     
     label_map = {0: 'negative', 1: 'positive', 2: 'neutral'}
     data['actual_label'] = data['Label'].map(label_map)
