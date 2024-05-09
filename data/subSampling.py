@@ -27,7 +27,6 @@ def subsample_and_save(dataset_name):
     
     # Step 3: Save the subset to a TSV file in the structured path
     subsample_file_path = f'./data/processed/{dataset_name}_subsample/test.tsv'
-    final_sample.drop(columns=['word_count'], inplace=True)
     final_sample.to_csv(subsample_file_path, sep='\t', index=False)
     
     # Step 4: Provide statistics
