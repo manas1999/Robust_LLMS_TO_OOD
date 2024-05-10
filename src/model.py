@@ -9,6 +9,7 @@ from scripts.fine_tune import finetune_roberta,finetune_t5,finetune_gpt2
 from scripts.other_tuning import fine_tune_lora,fine_tune_with_qlora,full_finetune
 from data.dataLoader import data_loader
 from data.subSampling import subsample_and_save
+from scripts.Evaluation import evaluate
 
 
 def main():
@@ -23,9 +24,14 @@ def main():
     parser.add_argument('--prompt_type', type=str, choices= ['zero_shot_prompt','k_shot_prompt','CoT','rewrite_reviews'])
     parser.add_argument('--batch_size', type=int)
     parser.add_argument('--subSample', type=str)
+    parser.add_argument('--evaluate',type=str)
 
     args = parser.parse_args()
 
+
+    if args.evaluate :
+         evaluate(args.evaluate)
+         return
      ## for prompting
     if args.prompt_type == 'zero_shot_prompt':
         run_sentiment_analysis_on_all_datasets("llama_70b")
