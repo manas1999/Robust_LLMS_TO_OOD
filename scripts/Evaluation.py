@@ -71,7 +71,7 @@ def evaluate(model):
             tokenized_test_data = test_data.map(tokenize_function, batched=True, fn_kwargs={'tokenizer': tokenizer})
             result = evaluate_model(model, tokenized_test_data, tokenizer, device)
             result["Dataset"] = name
-            results_df = results_df.append(result, ignore_index=True)
+            results_df = pd.concat([results_df, pd.DataFrame([result])], ignore_index=True)
 
     results_df.to_csv("./results/finetuned_results.csv", index=False)
     print("Saved the evaluation results ./Prompts/results/sentiment_analysis_overall_results.csv ")
