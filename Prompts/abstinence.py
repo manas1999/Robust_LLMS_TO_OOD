@@ -63,8 +63,8 @@ def process_batch(data_batch, model):
             'prompt_format_string': '<human>: {prompt}\n'
         }
         predicted_label, remaining_requests, remaining_seconds = inference(json)
-        print(prompt)
-        print(predicted_label)
+        #print(prompt)
+        #print(predicted_label)
         prediction_df_rows.append({'prompt': prompt, 'predicted_label': predicted_label, 'actual_label': row['actual_label']})
         time.sleep(1)  # Rate limit handling
 
@@ -111,7 +111,7 @@ Please ensure that your analysis is sensitive to different styles and languages 
     
      # Apply the extraction function to get predicted sentiment
     prediction_data['predicted_label'] = prediction_data['predicted_label'].apply(extract_sentiment)
-    print(prediction_data['predicted_label'])
+    #print(prediction_data['predicted_label'])
     
     # Here we treat 'abstain' as being correct if the actual sentiment is unclear
     prediction_data['Match'] = prediction_data.apply(lambda x: 1 if (x['predicted_label'] == x['actual_label'] or x['predicted_label'] == 'abstain' or x['predicted_label'] == 'Abstain') else 0, axis=1)
