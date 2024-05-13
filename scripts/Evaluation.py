@@ -50,6 +50,7 @@ def evaluate_model(model, data, tokenizer, device):
     }
 
 def evaluate(model):
+    model_name  = model
     model_path = f'../outputs/models/{model}'
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     model = AutoModelForSequenceClassification.from_pretrained(model_path).to("cuda")
@@ -73,5 +74,5 @@ def evaluate(model):
             result["Dataset"] = name
             results_df = pd.concat([results_df, pd.DataFrame([result])], ignore_index=True)
 
-    results_df.to_csv(f"./results/{model}_finetuned_results.csv", index=False)
-    print(f"Saved the evaluation results ./results/{model}_finetuned_results.csv ")
+    results_df.to_csv(f"./results/{model_name}_finetuned_results.csv", index=False)
+    print(f"Saved the evaluation results ./results/{model_name}_finetuned_results.csv ")
