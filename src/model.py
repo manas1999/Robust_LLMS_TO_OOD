@@ -11,6 +11,9 @@ from data.dataLoader import data_loader
 from data.subSampling import subsample_and_save
 from scripts.Evaluation import evaluate
 from Prompts.Explanation import explanation_sentiment_analysis_on_all_datasets
+from Prompts.abstinence import abstain_sentiment_analysis_on_all_datasets
+
+
 
 
 def main():
@@ -22,7 +25,7 @@ def main():
     parser.add_argument('--infer', action='store_true', help='Flag to run inference on the model')
     parser.add_argument('--plot_embeddings', action='store_true', help='Flag to plot embeddings')
     parser.add_argument('--dataset', type=str, help='dataset to load')
-    parser.add_argument('--prompt_type', type=str, choices= ['zero_shot_prompt','k_shot_prompt','CoT','rewrite_reviews','explanation'])
+    parser.add_argument('--prompt_type', type=str, choices= ['zero_shot_prompt','k_shot_prompt','CoT','rewrite_reviews','explanation','abstain'])
     parser.add_argument('--batch_size', type=int)
     parser.add_argument('--subSample', type=str)
     parser.add_argument('--evaluate',type=str)
@@ -49,6 +52,10 @@ def main():
     elif args.prompt_type == 'explanation':
         explanation_sentiment_analysis_on_all_datasets('llama_70b')
         return
+    elif args.prompt_type == 'abstain':
+        abstain_sentiment_analysis_on_all_datasets('llama_70b')
+        return
+        
         
          
     
