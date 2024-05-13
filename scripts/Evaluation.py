@@ -73,5 +73,5 @@ def evaluate(model):
             result["Dataset"] = name
             results_df = pd.concat([results_df, pd.DataFrame([result])], ignore_index=True)
 
-    results_df.to_csv("./results/finetuned_results.csv", index=False)
-    print("Saved the evaluation results ./Prompts/results/sentiment_analysis_overall_results.csv ")
+    results_df.to_csv(f"./results/{model}_finetuned_results.csv", index=False)
+    print(f"Saved the evaluation results ./results/{model}_finetuned_results.csv ")
