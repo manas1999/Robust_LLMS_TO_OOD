@@ -131,7 +131,6 @@ Please ensure that your analysis is sensitive to different styles and languages 
 
 def abstain_sentiment_analysis_on_all_datasets(model_name):
     datasets = ['amazon_subsample', 'dynasent_subsample', 'sst5_subsample', 'semeval_subsample']
-    datasets = ['amazon']
     results = []
     
     for dataset in datasets:
