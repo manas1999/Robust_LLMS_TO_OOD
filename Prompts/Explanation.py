@@ -3,6 +3,7 @@ import numpy as np
 import time
 import requests
 from collections import defaultdict
+import re
 
 # Assuming data_loader is correctly imported and configured
 from data.dataLoader import data_loader
@@ -64,17 +65,19 @@ def process_batch(data_batch, model):
             'prompt_format_string': '<human>: {prompt}\n'
         }
         predicted_label, remaining_requests, remaining_seconds = inference(json)
+        #print(predicted_label)
         prediction_df_rows.append({'prompt': prompt, 'predicted_label': predicted_label, 'actual_label': row['actual_label']})
         time.sleep(1)  # Rate limit handling
 
     prediction_data = pd.DataFrame(prediction_df_rows)
     return prediction_data
 
-def main_zero_shot_fucntion(dataset_name, model_name):
+def main_explanation_fucntion(dataset_name, model_name):
     _, test_dataset = data_loader.generic_data_loader(dataset_name)
     
     # Downsample the dataset
     data = test_dataset.to_pandas()
+    #data = data.head(10)
     
     label_map = {0: 'negative', 1: 'positive', 2: 'neutral'}
     data['actual_label'] = data['Label'].map(label_map)
@@ -87,110 +90,60 @@ def main_zero_shot_fucntion(dataset_name, model_name):
               "reflects the sentiment of the input text. If there are multiple sentiments present in the text, please choose "
               "the one that best represents the overall feeling conveyed by the author. Please note that your analysis should "
               "take into account all relevant factors, such as tone, language use, and content. Your response should also be "
-              "flexible enough to allow for various types of input texts.")
+              "flexible enough to allow for various types of input texts. Along with sentiment produce explanation like #Explanation: ... ")
     data['zero_shot_prompt'] = data.apply(lambda x: f"Prompt: {prompt}\nsummary : {x['Text']}\nSentiment:", axis=1)
     
+    # Process the batch using the model
     prediction_data = process_batch(data, model_map[model_name])
+    
+    # Define a function to extract sentiment and explanation from the predicted text
+    def extract_sentiment_and_explanation(text):
+        # Regular expression to capture optional sentiment and mandatory explanation
+        # This pattern matches even if the sentiment is missing
+        pattern = re.compile(r"Sentiment:\s*(?P<sentiment>Positive|Negative|Neutral|positive|negative|neutral)\s*\n\nExplanation:\s*(?P<explanation>.+)", re.DOTALL | re.IGNORECASE)
+        match = pattern.search(text)
+        if match:
+            sentiment = match.group('sentiment').strip().lower() if match.group('sentiment') else None
+            explanation = match.group('explanation').strip()
+            #print(sentiment , explanation)
+            return sentiment, explanation
+        return None, None
+    
+    # Apply the extraction function to get predicted sentiment and explanation
+    prediction_data[['predicted_label', 'explanation']] = prediction_data['predicted_label'].apply(
+        lambda x: pd.Series(extract_sentiment_and_explanation(x))
+    )
+    
     prediction_data['predicted_label'] = prediction_data['predicted_label'].str.lower().str.strip()
     prediction_data['actual_label'] = prediction_data['actual_label'].str.lower().str.strip()
+    
+    # Calculate matches and accuracy
     prediction_data['Match'] = np.where(prediction_data['predicted_label'] == prediction_data['actual_label'], 1, 0)
-
-    # Calculate accuracy
     accuracy = prediction_data['Match'].sum() / prediction_data.shape[0]
+    
     print(f"Accuracy of the model on {dataset_name}: {accuracy:.2%}")
-
+    
     # Save the results
-    results_path = f'./Prompts/results/sentiment_analysis_results_{dataset_name}.csv'
+    results_path = f'./Prompts/results/sentiment_analysis_results_with_explanations_{dataset_name}.csv'
     prediction_data.to_csv(results_path, index=False)
     print(f"Results saved to {results_path}")
     
     return accuracy, prediction_data
 
 
-def main_K_shot_function(dataset_name, model_name, k=1):
-    # Load the test dataset
-    _, test_dataset = data_loader.generic_data_loader(dataset_name)
-    # Load the Amazon dataset
-    train_dataset, _ = data_loader.generic_data_loader('amazon')
-
-    # Convert datasets to pandas DataFrames
-    data = test_dataset.to_pandas()
-    amazon_data = train_dataset.to_pandas()
-
-    # Map numeric labels to text
-    label_map = {0: 'negative', 1: 'positive', 2: 'neutral'}
-    data['actual_label'] = data['Label'].map(label_map)
-
-    # Randomly pick one example from each label in the Amazon dataset
-    examples = defaultdict(list)
-    for label in [0, 1, 2]:
-        examples[label] = amazon_data[amazon_data['Label'] == label].sample(n=k)
-
-    # Build the K-shot prompt with examples from Amazon dataset
-    base_prompt = (
-        "For sentiment analysis: Your task is to perform a sentiment analysis on a given input text and "
-        "provide a single word indicating whether the sentiment is positive, negative, or neutral. Here are some examples:\n\n"
-    )
-
-    # Adding examples to the base prompt
-    for label in [0, 1, 2]:
-        for _, row in examples[label].iterrows():
-            base_prompt += f"Text: \"{row['Text']}\"\nSentiment: {label_map[row['Label']]}\n\n"
-
-    base_prompt += (
-        "Now, analyze the following text and provide the sentiment:\n\n"
-    )
-
-    # Apply the prompt to each sample in the test dataset
-    data['zero_shot_prompt'] = data.apply(lambda x: f"{base_prompt}Text: {x['Text']}\nSentiment:", axis=1)
-
-    # Process the batch and predict the sentiment
-    prediction_data = process_batch(data, model_map[model_name])
-    prediction_data['predicted_label'] = prediction_data['predicted_label'].str.lower().str.strip()
-    prediction_data['actual_label'] = prediction_data['actual_label'].str.lower().str.strip()
-
-    # Compute the accuracy of predictions
-    prediction_data['Match'] = np.where(prediction_data['predicted_label'] == prediction_data['actual_label'], 1, 0)
-    accuracy = prediction_data['Match'].sum() / prediction_data.shape[0]
-
-    print(f"Accuracy of the model on {dataset_name}: {accuracy:.2%}")
-
-    # Save the results
-    results_path = f'./Prompts/results/K_Shot_sentiment_analysis_results_{dataset_name}.csv'
-    prediction_data.to_csv(results_path, index=False)
-    print(f"Results saved to {results_path}")
-
-    return accuracy, prediction_data
-
-
-
-def run_sentiment_analysis_on_all_datasets(model_name):
+def explanation_sentiment_analysis_on_all_datasets(model_name):
     datasets = ['amazon_subsample', 'dynasent_subsample', 'sst5_subsample', 'semeval_subsample']
+    datasets = ['amazon']
     results = []
     
     for dataset in datasets:
-        accuracy, prediction_data = main_zero_shot_fucntion(dataset, model_name)
+        accuracy, prediction_data = main_explanation_fucntion(dataset, model_name)
         results.append({'Dataset': dataset, 'Accuracy': accuracy})
         print(f"Completed {dataset} with accuracy: {accuracy:.2%}")
 
     results_df = pd.DataFrame(results)
-    results_df.to_csv('./Prompts/results/sentiment_analysis_overall_results.csv', index=False)
-    print("Overall results saved to sentiment_analysis_overall_results.csv")
-    
-    return results_df
-
-def k_shot_run_sentiment_analysis_on_all_datasets(model_name):
-    datasets = ['amazon_subsample', 'dynasent_subsample', 'sst5_subsample', 'semeval_subsample']
-    results = []
-    
-    for dataset in datasets:
-        accuracy, prediction_data = main_K_shot_function(dataset, model_name)
-        results.append({'Dataset': dataset, 'Accuracy': accuracy})
-        print(f"Completed {dataset} with accuracy: {accuracy:.2%}")
-
-    results_df = pd.DataFrame(results)
-    results_df.to_csv('./Prompts/results/k_shot_sentiment_analysis_overall_results.csv', index=False)
-    print("Overall results saved to K-Shot_sentiment_analysis_overall_results.csv")
+    results_df.to_csv('./Prompts/results/explanation_sentiment_analysis_overall_results.csv', index=False)
+    print("Overall results saved to explanation_analysis_overall_results.csv")
     
     return results_df
 

@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import pandas as pd
 import argparse
-from Prompts.Zero_shot_Prompting import run_sentiment_analysis_on_all_datasets
+from Prompts.Zero_shot_Prompting import run_sentiment_analysis_on_all_datasets,k_shot_run_sentiment_analysis_on_all_datasets
 from Prompts.COT_Prompting import run_CoT_on_all_datasets
 from Prompts.dataset_generation import rewrite_reviews
 from scripts.fine_tune import finetune_roberta,finetune_t5,finetune_gpt2
@@ -10,6 +10,7 @@ from scripts.other_tuning import fine_tune_lora,fine_tune_with_qlora,full_finetu
 from data.dataLoader import data_loader
 from data.subSampling import subsample_and_save
 from scripts.Evaluation import evaluate
+from Prompts.Explanation import explanation_sentiment_analysis_on_all_datasets
 
 
 def main():
@@ -21,14 +22,14 @@ def main():
     parser.add_argument('--infer', action='store_true', help='Flag to run inference on the model')
     parser.add_argument('--plot_embeddings', action='store_true', help='Flag to plot embeddings')
     parser.add_argument('--dataset', type=str, help='dataset to load')
-    parser.add_argument('--prompt_type', type=str, choices= ['zero_shot_prompt','k_shot_prompt','CoT','rewrite_reviews'])
+    parser.add_argument('--prompt_type', type=str, choices= ['zero_shot_prompt','k_shot_prompt','CoT','rewrite_reviews','explanation'])
     parser.add_argument('--batch_size', type=int)
     parser.add_argument('--subSample', type=str)
     parser.add_argument('--evaluate',type=str)
 
     args = parser.parse_args()
 
-
+    print(args.evaluate)
     if args.evaluate :
          evaluate(args.evaluate)
          return
@@ -42,6 +43,14 @@ def main():
     elif args.prompt_type == 'rewrite_reviews':
          rewrite_reviews("sst5","llama_70b")
          return
+    elif args.prompt_type == "k_shot_prompt":
+         k_shot_run_sentiment_analysis_on_all_datasets("llama_70b")
+         return
+    elif args.prompt_type == 'explanation':
+        explanation_sentiment_analysis_on_all_datasets('llama_70b')
+        return
+        
+         
     
     if args.subSample:
         total_samples, samples_per_label, subsample_file_path = subsample_and_save(args.subSample)
