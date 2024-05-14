@@ -133,10 +133,8 @@ def main_K_shot_function(dataset_name, model_name):
 def k_shot_run_sentiment_analysis_on_all_datasets_kshot(model_name):
     datasets = ['amazon_subsample', 'dynasent_subsample', 'sst5_subsample', 'semeval_subsample']
     results = []
-    
     for dataset in datasets:
         accuracy, prediction_data = main_K_shot_function(dataset, model_name)
-        exit
         results.append({'Dataset': dataset, 'Accuracy': accuracy})
         print(f"Completed {dataset} with accuracy: {accuracy:.2%}")
     results_df = pd.DataFrame(results)
