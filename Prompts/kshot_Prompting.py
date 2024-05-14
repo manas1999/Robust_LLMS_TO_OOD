@@ -15,7 +15,8 @@ model_map = {
     "llama_2b_it": "togethercomputer/Llama-2-7B-32K-Instruct",
     "Mistral": "mistralai/Mistral-7B-v0.1",  # not instruct
     "Gemma": "google/gemma-7b",  # not instruct
-    "llama_70b": 'meta-llama/Llama-2-70b-chat-hf'
+    "llama_70b": 'meta-llama/Llama-2-70b-chat-hf',
+    "llama_8b_it":'meta-llama/Llama-3-8b-chat-hf'
 }
 
 def inference(json, retries=3):
@@ -116,7 +117,7 @@ def main_K_shot_function(dataset_name, model_name):
     print(f"Accuracy of the model on {dataset_name}: {accuracy:.2%}")
 
     # Save the results
-    results_path = f'./Prompts/results/sentiment_analysis_results_6_k_shot_samples_{dataset_name}.csv'
+    results_path = f'./Prompts/results/{model_name}_results_6_k_shot_samples_{dataset_name}.csv'
     prediction_data.to_csv(results_path, index=False)
     print(f"Results saved to {results_path}")
     
@@ -124,7 +125,7 @@ def main_K_shot_function(dataset_name, model_name):
 
 
 def k_shot_run_sentiment_analysis_on_all_datasets_kshot(model_name):
-    datasets = ['amazon', 'dynasent_subsample', 'sst5_subsample', 'semeval_subsample']
+    datasets = ['amazon_subsample', 'dynasent_subsample', 'sst5_subsample', 'semeval_subsample']
     results = []
     
     for dataset in datasets:
@@ -133,7 +134,7 @@ def k_shot_run_sentiment_analysis_on_all_datasets_kshot(model_name):
         results.append({'Dataset': dataset, 'Accuracy': accuracy})
         print(f"Completed {dataset} with accuracy: {accuracy:.2%}")
     results_df = pd.DataFrame(results)
-    results_df.to_csv('./Prompts/results/k_shot_sentiment_analysis_overall_results_6_k_shot_samples.csv', index=False)
+    results_df.to_csv(f'./Prompts/results/{model_name}_k_shot_overall_results_6_k_shot_samples.csv', index=False)
     print("Overall results saved to k_shot_sentiment_analysis_overall_results_6_k_shot_samples.csv")
     
     return results_df
