@@ -35,6 +35,7 @@ def inference(json, retries=3):
 
             return prediction, remaining_requests, reset_time
         except requests.exceptions.HTTPError as err:
+            response_headers = res.headers if 'res' in locals() else {}
             if res.status_code == 429:
                 reset_time = int(response_headers.get('x-ratelimit-reset', 60))
                 print(f"Rate limit exceeded. Retrying in {reset_time} seconds.")
