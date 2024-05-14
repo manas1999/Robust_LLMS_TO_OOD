@@ -123,7 +123,7 @@ Please ensure that your analysis is sensitive to different styles and languages 
     
     
     # Save the results
-    results_path = f'./Prompts/results/sentiment_analysis_results_with_abstainance_{dataset_name}.csv'
+    results_path = f'./Prompts/results/{model_name}_results_with_abstainance_{dataset_name}.csv'
     prediction_data.to_csv(results_path, index=False)
     print(f"Results saved to {results_path}")
     
@@ -140,7 +140,7 @@ def abstain_sentiment_analysis_on_all_datasets(model_name):
         print(f"Completed {dataset} with accuracy: {accuracy:.2%}")
 
     results_df = pd.DataFrame(results)
-    results_df.to_csv('./Prompts/results/abstainance_sentiment_analysis_overall_results.csv', index=False)
+    results_df.to_csv(f'./Prompts/results/{model_name}_abstainance_overall_results.csv', index=False)
     print("Overall results saved to abstainance_sentiment_analysis_overall_results.csv")
     
     return results_df

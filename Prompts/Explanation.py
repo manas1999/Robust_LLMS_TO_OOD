@@ -125,7 +125,7 @@ def main_explanation_fucntion(dataset_name, model_name):
     print(f"Accuracy of the model on {dataset_name}: {accuracy:.2%}")
     
     # Save the results
-    results_path = f'./Prompts/results/sentiment_analysis_results_with_explanations_{dataset_name}.csv'
+    results_path = f'./Prompts/results/{model_name}_results_with_explanations_{dataset_name}.csv'
     prediction_data.to_csv(results_path, index=False)
     print(f"Results saved to {results_path}")
     
@@ -142,7 +142,7 @@ def explanation_sentiment_analysis_on_all_datasets(model_name):
         print(f"Completed {dataset} with accuracy: {accuracy:.2%}")
 
     results_df = pd.DataFrame(results)
-    results_df.to_csv('./Prompts/results/explanation_sentiment_analysis_overall_results.csv', index=False)
+    results_df.to_csv(f'./Prompts/results/{model_name}_explanation_overall_results.csv', index=False)
     print("Overall results saved to explanation_analysis_overall_results.csv")
     
     return results_df

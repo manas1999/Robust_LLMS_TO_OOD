@@ -100,7 +100,7 @@ def CoT(dataset_name, model_name):
     print(f"Accuracy of the model on {dataset_name}: {accuracy:.2%}")
 
     # Save the results including the reason for the prediction
-    results_path = f'./Prompts/results/COT_detailed_results_{dataset_name}.csv'
+    results_path = f'./Prompts/results/{model_name}_COT_detailed_results_{dataset_name}.csv'
     prediction_data.to_csv(results_path, index=False)
     print(f"Results saved to {results_path}")
     
@@ -116,7 +116,7 @@ def run_CoT_on_all_datasets(model_name):
         print(f"Completed {dataset} with accuracy: {accuracy:.2%}")
 
     results_df = pd.DataFrame(results)
-    results_df.to_csv('./Prompts/results/COT_summary_results.csv', index=False)
+    results_df.to_csv(f'./Prompts/results/{model_name}_COT_summary_results.csv', index=False)
     print("Overall results saved to COT_summary_results.csv")
     
     return results_df

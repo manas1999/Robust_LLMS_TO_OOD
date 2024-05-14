@@ -157,7 +157,7 @@ def main_K_shot_function(dataset_name, model_name, k=1):
     print(f"Accuracy of the model on {dataset_name}: {accuracy:.2%}")
 
     # Save the results
-    results_path = f'./Prompts/results/K_Shot_sentiment_analysis_results_{dataset_name}.csv'
+    results_path = f'./Prompts/results/{model_name}_K_Shot_results_{dataset_name}.csv'
     prediction_data.to_csv(results_path, index=False)
     print(f"Results saved to {results_path}")
 
@@ -190,8 +190,8 @@ def k_shot_run_sentiment_analysis_on_all_datasets(model_name):
         print(f"Completed {dataset} with accuracy: {accuracy:.2%}")
 
     results_df = pd.DataFrame(results)
-    results_df.to_csv('./Prompts/results/k_shot_sentiment_analysis_overall_results.csv', index=False)
-    print("Overall results saved to K-Shot_sentiment_analysis_overall_results.csv")
+    results_df.to_csv(f'./Prompts/results/{model_name}_k_shot_overall_results.csv', index=False)
+    print(f"Overall results saved to {model_name} K-Shot_sentiment_analysis_overall_results.csv")
     
     return results_df
 
