@@ -3,6 +3,7 @@ import torch
 import pandas as pd
 import argparse
 from Prompts.Zero_shot_Prompting import run_sentiment_analysis_on_all_datasets,k_shot_run_sentiment_analysis_on_all_datasets
+from Prompts.kshot_Prompting import k_shot_run_sentiment_analysis_on_all_datasets_kshot
 from Prompts.COT_Prompting import run_CoT_on_all_datasets
 from Prompts.dataset_generation import rewrite_reviews
 from scripts.fine_tune import finetune_roberta,finetune_t5,finetune_gpt2
@@ -15,7 +16,6 @@ from Prompts.abstinence import abstain_sentiment_analysis_on_all_datasets
 
 
 
-
 def main():
     parser = argparse.ArgumentParser(description='Fine-tune or test a model on a given dataset.')
     parser.add_argument('--model_name', type=str, help='Model name to use', default="bert-base-uncased")
@@ -25,7 +25,7 @@ def main():
     parser.add_argument('--infer', action='store_true', help='Flag to run inference on the model')
     parser.add_argument('--plot_embeddings', action='store_true', help='Flag to plot embeddings')
     parser.add_argument('--dataset', type=str, help='dataset to load')
-    parser.add_argument('--prompt_type', type=str, choices= ['zero_shot_prompt','k_shot_prompt','CoT','rewrite_reviews','explanation','abstain'])
+    parser.add_argument('--prompt_type', type=str, choices= ['zero_shot_prompt','k_shot_prompt','CoT','rewrite_reviews','explanation','abstain','k_shot_prompt_with_samples'])
     parser.add_argument('--batch_size', type=int)
     parser.add_argument('--subSample', type=str)
     parser.add_argument('--evaluate',type=str)
@@ -37,23 +37,27 @@ def main():
          evaluate(args.evaluate)
          return
      ## for prompting
+    
     if args.prompt_type == 'zero_shot_prompt':
-        run_sentiment_analysis_on_all_datasets(args.model_name)
+        run_sentiment_analysis_on_all_datasets("llama_70b")
         return 
+    elif args.prompt_type == 'k_shot_prompt_with_samples':
+        k_shot_run_sentiment_analysis_on_all_datasets_kshot("llama_70b")
+        return
     elif args.prompt_type == 'CoT':
-        run_CoT_on_all_datasets(args.model_name)
+        run_CoT_on_all_datasets("llama_70b")
         return
     elif args.prompt_type == 'rewrite_reviews':
          rewrite_reviews("sst5","llama_70b")
          return
     elif args.prompt_type == "k_shot_prompt":
-         k_shot_run_sentiment_analysis_on_all_datasets(args.model_name)
+         k_shot_run_sentiment_analysis_on_all_datasets("llama_70b")
          return
     elif args.prompt_type == 'explanation':
-        explanation_sentiment_analysis_on_all_datasets(args.model_name)
+        explanation_sentiment_analysis_on_all_datasets('llama_70b')
         return
     elif args.prompt_type == 'abstain':
-        abstain_sentiment_analysis_on_all_datasets(args.model_name)
+        abstain_sentiment_analysis_on_all_datasets('llama_70b')
         return
         
         
