@@ -20,11 +20,12 @@ model_map = {
 }
 
 def inference(json, retries=3):
+    response_headers = {}  # Ensure response_headers is always defined
     for attempt in range(retries):
         try:
             res = requests.post(endpoint, json=json, headers={"Authorization": f"Bearer {TOGETHER_API_KEY}"})
-            response_headers = res.headers
             res.raise_for_status()
+            response_headers = res.headers
             prediction = res.json()['output']['choices'][0]['text']
             remaining_requests = response_headers.get('x-ratelimit-remaining', 'N/A')
             reset_time = int(response_headers.get('x-ratelimit-reset', 60))
@@ -35,13 +36,17 @@ def inference(json, retries=3):
 
             return prediction, remaining_requests, reset_time
         except requests.exceptions.HTTPError as err:
-            response_headers = res.headers if 'res' in locals() else {}
-            if res.status_code == 429:
-                reset_time = int(response_headers.get('x-ratelimit-reset', 60))
-                print(f"Rate limit exceeded. Retrying in {reset_time} seconds.")
-                time.sleep(reset_time + 0.5)
+            if 'res' in locals():
+                response_headers = res.headers
+                if res.status_code == 429:
+                    reset_time = int(response_headers.get('x-ratelimit-reset', 60))
+                    print(f"Rate limit exceeded. Retrying in {reset_time} seconds.")
+                    time.sleep(reset_time + 0.5)
+                else:
+                    print(f"HTTP error occurred: {err}")
+                    return "HTTP error from API", "N/A", "N/A"
             else:
-                print(f"HTTP error occurred: {err}")
+                print(f"HTTP error occurred before response was received: {err}")
                 return "HTTP error from API", "N/A", "N/A"
         except Exception as e:
             print(f"An error occurred: {e}")

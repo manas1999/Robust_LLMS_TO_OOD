@@ -20,6 +20,7 @@ model_map = {
 }
 
 def inference(json, retries=3):
+    response_headers = {}  # Ensure response_headers is always defined
     for attempt in range(retries):
         try:
             res = requests.post(endpoint, json=json, headers={"Authorization": f"Bearer {TOGETHER_API_KEY}"})
@@ -35,17 +36,22 @@ def inference(json, retries=3):
 
             return prediction, remaining_requests, reset_time
         except requests.exceptions.HTTPError as err:
-            response_headers = res.headers if 'res' in locals() else {}
-            if res.status_code == 429:
-                reset_time = int(response_headers.get('x-ratelimit-reset', 60))
-                print(f"Rate limit exceeded. Retrying in {reset_time} seconds.")
-                time.sleep(reset_time + 0.5)
+            if 'res' in locals():
+                response_headers = res.headers
+                if res.status_code == 429:
+                    reset_time = int(response_headers.get('x-ratelimit-reset', 60))
+                    print(f"Rate limit exceeded. Retrying in {reset_time} seconds.")
+                    time.sleep(reset_time + 0.5)
+                else:
+                    print(f"HTTP error occurred: {err}")
+                    return "HTTP error from API", "N/A", "N/A"
             else:
-                print(f"HTTP error occurred: {err}")
+                print(f"HTTP error occurred before response was received: {err}")
                 return "HTTP error from API", "N/A", "N/A"
         except Exception as e:
             print(f"An error occurred: {e}")
             return "Error from API", "N/A", "N/A"
+
     return "Failed after retries", "N/A", "N/A"
 
 def process_batch(data_batch, model):
@@ -78,7 +84,6 @@ def main_abstain_function(dataset_name, model_name):
     #print(model_name)
     # Downsample the dataset
     data = test_dataset.to_pandas()
-    #data = data.head(1)
     #data = pd.DataFrame([{'Text': " asonfoin safnioie fainfoiqen   ", 'Label': 'Neutral'}])
     label_map = {0: 'negative', 1: 'positive', 2: 'neutral'}
     data['actual_label'] = data['Label'].map(label_map)
