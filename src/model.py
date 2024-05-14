@@ -38,22 +38,22 @@ def main():
          return
      ## for prompting
     if args.prompt_type == 'zero_shot_prompt':
-        run_sentiment_analysis_on_all_datasets("llama_70b")
+        run_sentiment_analysis_on_all_datasets(args.model_name)
         return 
     elif args.prompt_type == 'CoT':
-        run_CoT_on_all_datasets("llama_70b")
+        run_CoT_on_all_datasets(args.model_name)
         return
     elif args.prompt_type == 'rewrite_reviews':
          rewrite_reviews("sst5","llama_70b")
          return
     elif args.prompt_type == "k_shot_prompt":
-         k_shot_run_sentiment_analysis_on_all_datasets("llama_70b")
+         k_shot_run_sentiment_analysis_on_all_datasets(args.model_name)
          return
     elif args.prompt_type == 'explanation':
-        explanation_sentiment_analysis_on_all_datasets('llama_70b')
+        explanation_sentiment_analysis_on_all_datasets(args.model_name)
         return
     elif args.prompt_type == 'abstain':
-        abstain_sentiment_analysis_on_all_datasets('llama_70b')
+        abstain_sentiment_analysis_on_all_datasets(args.model_name)
         return
         
         

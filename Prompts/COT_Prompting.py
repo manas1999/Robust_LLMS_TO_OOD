@@ -13,9 +13,9 @@ model_map = {
     "llama_2b_it": "togethercomputer/Llama-2-7B-32K-Instruct",
     "Mistral": "mistralai/Mistral-7B-v0.1",  # not instruct
     "Gemma": "google/gemma-7b",  # not instruct
-    "llama_70b": 'meta-llama/Llama-2-70b-chat-hf'
+    "llama_70b": 'meta-llama/Llama-2-70b-chat-hf',
+    "llama_8b_it":'meta-llama/Llama-3-8b-chat-hf'
 }
-
 def inference(json, retries=3):
     for attempt in range(retries):
         try:
