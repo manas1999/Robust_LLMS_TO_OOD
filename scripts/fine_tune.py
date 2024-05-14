@@ -183,7 +183,6 @@ def finetune_t5(dataset,batch_size):
     return model
 
 
-# Define the fine-tune function for GPT-2 with Weights & Biases
 def finetune_gpt2(dataset,batch_size):
     # Initialize Weights & Biases
     wandb.login(key="5035d804b450ae72d3a317de6ddde7e467aab080")
@@ -206,29 +205,19 @@ def finetune_gpt2(dataset,batch_size):
         label_texts = ["positive" if label == 1 else "negative" if label == 0 else "neutral" for label in batch['Label']]
 
         # Prepare input-output text for GPT-2
-        input_texts = [f"Text: {text} | Sentiment:" for text in texts]
-        output_texts = [f" {label}" for label in label_texts]
+        input_texts = [f"Text: {text} | Sentiment: {label}" for text, label in zip(texts, label_texts)]
 
-        # Tokenize the inputs and outputs
+        # Tokenize the inputs
         tokenized_inputs = tokenizer(
             input_texts,
-            padding=True,
+            padding="max_length",
             truncation=True,
             max_length=512,
             return_tensors="pt"
         )
-        tokenized_labels = tokenizer(
-            output_texts,
-            padding=True,
-            truncation=True,
-            max_length=16,
-            return_tensors="pt"
-        )
-        if tokenized_labels["input_ids"].nelement() == 0:
-            print("Warning: Empty labels encountered")
-
-        # Append labels to inputs for GPT-2
-        tokenized_inputs["labels"] = tokenized_labels["input_ids"]
+        
+        # Shift labels to align with the model's outputs
+        tokenized_inputs["labels"] = tokenized_inputs["input_ids"].clone()
         return tokenized_inputs
 
     # Split dataset into training and evaluation
@@ -276,10 +265,8 @@ def finetune_gpt2(dataset,batch_size):
     save_path = '../outputs/models/gpt2_sentiment'
     model.save_pretrained(save_path)
     tokenizer.save_pretrained(save_path)
-    artifact = wandb.Artifact('roberta_model', type='model')
+    artifact = wandb.Artifact('gpt2_sentiment_model', type='model')
     artifact.add_dir(save_path)
     wandb.log_artifact(artifact)
 
     return model
-
-
