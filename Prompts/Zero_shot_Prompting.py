@@ -8,15 +8,15 @@ from collections import defaultdict
 from data.dataLoader import data_loader
 
 endpoint = 'https://api.together.xyz/inference'
-TOGETHER_API_KEY = '76d1f3828a741254dd8bbd827864a95196c1845ff2dca061114700f6cd895952'
+TOGETHER_API_KEY = '9b3a40a05619e5f1992938cc171800fe2140055652aa4524fc942ae4e1f89ff7'
 model_map = {
-    "gemma_2b": "google/gemma-2b-it",
-    "phi_2": "microsoft/phi-2",
-    "llama_2b_it": "togethercomputer/Llama-2-7B-32K-Instruct",
-    "Mistral": "mistralai/Mistral-7B-v0.1",  # not instruct
-    "Gemma": "google/gemma-7b",  # not instruct
-    "llama_70b": 'meta-llama/Llama-2-70b-chat-hf',
-    "llama_8b_it":'meta-llama/Llama-3-8b-chat-hf'
+    "gemma_2b": {"model": "google/gemma-2b-it", "prompt_format_string": "<human>: {prompt}\n<bot>:", "type":"chat"},
+    "phi_2": {"model": "microsoft/phi-2", "prompt_format_string": None, "type":"language"},
+    "llama_2b_it": {"model": "togethercomputer/Llama-2-7B-32K-Instruct", "prompt_format_string": "[INST]\n  {prompt}\n \n[/INST]\n\n", "type":"chat"},
+    "Mistral": {"model": "mistralai/Mistral-7B-v0.1", "prompt_format_string": None, "type":"language"},
+    "Gemma": {"model": "google/gemma-7b", "prompt_format_string": None, "type":"language"},
+    "llama_70b": {"model": 'meta-llama/Llama-2-70b-chat-hf', "prompt_format_string": "[INST]  {prompt}\n [/INST]", "type":"chat"},
+    "llama_8b_it": {"model": 'meta-llama/Llama-3-8b-chat-hf', "prompt_format_string": "<human>: {prompt}\n<bot>:", "type":"chat"}
 }
 
 def inference(json, retries=3):
@@ -54,12 +54,22 @@ def inference(json, retries=3):
 
     return "Failed after retries", "N/A", "N/A"
 
-def process_batch(data_batch, model):
+def process_batch(data_batch, model_map, model_name):
     prediction_df_rows = []
-    for index, row in data_batch.iterrows():
-        prompt = row['zero_shot_prompt']
+    if model_map[model_name]['type'] == "language":
         json = {
-            'model': model,
+            'model': model_map[model_name]['model'],
+            'request_type': 'language-model-inference',
+            'temperature': 0.7,
+            'top_p': 0.7,
+            'top_k': 50,
+            'repetition_penalty': 1,
+            'negative_prompt': '',
+            "type": model_map[model_name]['type'],
+        }
+    else:
+        json = {
+            'model': model_map[model_name]['model'],
             'prompt': "",
             'request_type': 'language-model-inference',
             'temperature': 0.7,
@@ -67,9 +77,17 @@ def process_batch(data_batch, model):
             'top_k': 50,
             'repetition_penalty': 1,
             'negative_prompt': '',
-            'messages': [{'content': prompt, 'role': 'user'}],
-            'prompt_format_string': '<human>: {prompt}\n'
+            "type": model_map[model_name]['type'],
+            "stop": ["[INST]","\n\n"],
+            'prompt_format_string': model_map[model_name]['prompt_format_string']
         }
+    for index, row in data_batch.iterrows():
+        prompt = row['zero_shot_prompt']
+        if model_map[model_name]['type'] == "language":
+            json['prompt'] = prompt
+        else:
+            json['messages'] = [{'content': prompt, 'role': 'user'}]
+        
         predicted_label, remaining_requests, remaining_seconds = inference(json)
         prediction_df_rows.append({'prompt': prompt, 'predicted_label': predicted_label, 'actual_label': row['actual_label']})
         time.sleep(1)  # Rate limit handling
@@ -97,7 +115,7 @@ def main_zero_shot_fucntion(dataset_name, model_name):
               "flexible enough to allow for various types of input texts.")
     data['zero_shot_prompt'] = data.apply(lambda x: f"Prompt: {prompt}\nsummary : {x['Text']}\nSentiment:", axis=1)
     
-    prediction_data = process_batch(data, model_map[model_name])
+    prediction_data = process_batch(data, model_map, model_name)
     prediction_data['predicted_label'] = prediction_data['predicted_label'].str.lower().str.strip()
     prediction_data['actual_label'] = prediction_data['actual_label'].str.lower().str.strip()
     prediction_data['Match'] = np.where(prediction_data['predicted_label'] == prediction_data['actual_label'], 1, 0)
@@ -152,7 +170,7 @@ def main_K_shot_function(dataset_name, model_name, k=1):
     data['zero_shot_prompt'] = data.apply(lambda x: f"{base_prompt}Text: {x['Text']}\nSentiment:", axis=1)
 
     # Process the batch and predict the sentiment
-    prediction_data = process_batch(data, model_map[model_name])
+    prediction_data = process_batch(data, model_map, model_name)
     prediction_data['predicted_label'] = prediction_data['predicted_label'].str.lower().str.strip()
     prediction_data['actual_label'] = prediction_data['actual_label'].str.lower().str.strip()
 
