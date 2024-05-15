@@ -4,6 +4,7 @@ import pandas as pd
 import argparse
 from Prompts.Zero_shot_Prompting import run_sentiment_analysis_on_all_datasets,k_shot_run_sentiment_analysis_on_all_datasets
 from Prompts.kshot_Prompting import k_shot_run_sentiment_analysis_on_all_datasets_kshot
+from Prompts.ICR import run_reformulation_on_all_datasets
 from Prompts.COT_Prompting import run_CoT_on_all_datasets
 from Prompts.dataset_generation import rewrite_reviews
 from scripts.fine_tune import finetune_roberta,finetune_t5,finetune_gpt2
@@ -25,7 +26,7 @@ def main():
     parser.add_argument('--infer', action='store_true', help='Flag to run inference on the model')
     parser.add_argument('--plot_embeddings', action='store_true', help='Flag to plot embeddings')
     parser.add_argument('--dataset', type=str, help='dataset to load')
-    parser.add_argument('--prompt_type', type=str, choices= ['zero_shot_prompt','k_shot_prompt','CoT','rewrite_reviews','explanation','abstain','k_shot_prompt_with_samples'])
+    parser.add_argument('--prompt_type', type=str, choices= ['zero_shot_prompt','k_shot_prompt','CoT','rewrite_reviews','explanation','abstain','k_shot_prompt_with_samples','reformulation'])
     parser.add_argument('--batch_size', type=int)
     parser.add_argument('--subSample', type=str)
     parser.add_argument('--evaluate',type=str)
@@ -59,6 +60,10 @@ def main():
     elif args.prompt_type == 'abstain':
         abstain_sentiment_analysis_on_all_datasets(args.model_name)
         return
+    elif args.prompt_type == 'reformulation':
+        run_reformulation_on_all_datasets("llama_70b","llama_70b")
+        return
+    
         
         
          
