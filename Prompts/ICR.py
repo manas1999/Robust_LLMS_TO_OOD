@@ -5,16 +5,9 @@ import requests
 from data.dataLoader import data_loader
 
 endpoint = 'https://api.together.xyz/inference'
-TOGETHER_API_KEY = '76d1f3828a741254dd8bbd827864a95196c1845ff2dca061114700f6cd895952'
-model_map = {
-    "gemma_2b": "google/gemma-2b-it",
-    "phi_2": "microsoft/phi-2",
-    "llama_2b_it": "togethercomputer/Llama-2-7B-32K-Instruct",
-    "Mistral": "mistralai/Mistral-7B-v0.1",  # not instruct
-    "Gemma": "google/gemma-7b",  # not instruct
-    "llama_70b": 'meta-llama/Llama-2-70b-chat-hf',
-    "llama_8b_it":'meta-llama/Llama-3-8b-chat-hf'
-}
+TOGETHER_API_KEY = '9f33eff41b7f527b6804592e85b685ab18070c90d9cad652e7e1cc18786c587e'
+model_map = { "llama_70b": {"model": 'meta-llama/Llama-2-70b-chat-hf', "prompt_format_string": "[INST]  {prompt}\n [/INST]", "type":"chat"},
+    "llama_8b_it": {"model": 'meta-llama/Llama-3-8b-chat-hf', "prompt_format_string": "<human>: {prompt}\n<bot>:", "type":"chat"}}
 
 def inference(json, retries=3):
     response_headers = {}  # Ensure response_headers is always defined
@@ -51,12 +44,12 @@ def inference(json, retries=3):
 
     return "Failed after retries", "N/A", "N/A"
 
-def process_batch(data_batch, model):
+def process_batch(data_batch, model_map, model_name):
     prediction_df_rows = []
     for _, row in data_batch.iterrows():
         prompt = row['zero_shot_prompt']
         json = {
-            'model': model,
+            'model': model_map[model_name]['model'],
             'prompt': "",
             'request_type': 'language-model-inference',
             'temperature': 0.7,
@@ -64,8 +57,9 @@ def process_batch(data_batch, model):
             'top_k': 50,
             'repetition_penalty': 1,
             'negative_prompt': '',
+            "type": model_map[model_name]['type'],
             'messages': [{'content': prompt, 'role': 'user'}],
-            'prompt_format_string': '<human>: {prompt}\n'
+            'prompt_format_string': model_map[model_name]['prompt_format_string']
         }
         predicted_label, remaining_requests, remaining_seconds = inference(json)
         prediction_df_rows.append({'prompt': prompt, 'predicted_label': predicted_label, 'actual_label': row['actual_label']})
@@ -74,25 +68,28 @@ def process_batch(data_batch, model):
     prediction_data = pd.DataFrame(prediction_df_rows)
     return prediction_data
 
-def reformulate_inputs(data_batch, model, id_examples):
-    id_examples_samples = id_examples['Text'].sample(n=40, random_state=5).tolist()
+def reformulate_inputs(data_batch, model_name, id_examples):
+    id_examples_samples = id_examples['Text'].sample(n=20, random_state=5).tolist()
     id_examples_str = "\n".join(id_examples_samples)
     reformulated_inputs = []
     for _, row in data_batch.iterrows():
         input_text = row['Text']
-        prompt = f"The assistant is to paraphrase the input text as if it was one of the following examples. Change the details of the text if necessary. Here are the examples: \n\n{id_examples_str}\nNow paraphrase {input_text} as if it was one of the examples. Change the details of the text if necessary. Return the text in the format: 'Paraphrased Text'. Paraphrased Text:"
+        prompt = f"I have few examples that follow a particular style and now I want you to paraphrase a given input text such that it matches the style of the provided examples. Here are the examples: \n\n{id_examples_str}\nNow paraphrase {input_text} and provide only the paraphrased text without any additional information. Note: it is very important that you only provide the final output without any additional comments or remarks."
+        # prompt = f"The assistant is to paraphrase the input text as if it was one of the following examples. Change the details of the text if necessary. Here are the examples: \n\n{id_examples_str}\nNow paraphrase {input_text} as if it was one of the examples. Suggest me only the best Paraphrased Text without any other words. I dont want any explanations on why you gave me the paraphrased text and i only want the paraphrased text as the ouput. Paraphrased Text:"
+        # Return the text in the format: 'Paraphrased Text'. Paraphrased Text:"
         # prompt = f"Given these examples from the ID data:\n\n{id_examples_str}\n\nNow, reformulate the following OOD input to match the style of the ID examples:\n\n{input_text}"
         json = {
-            'model': model,
-            'prompt': prompt,
+            'model': model_map[model_name]['model'],
+            'prompt': "",
             'request_type': 'language-model-inference',
             'temperature': 0.7,
             'top_p': 0.7,
             'top_k': 50,
             'repetition_penalty': 1,
             'negative_prompt': '',
+            "type": model_map[model_name]['type'],
             'messages': [{'content': prompt, 'role': 'user'}],
-            'prompt_format_string': '<human>: {prompt}\n'   ## need to modify 
+            'prompt_format_string': model_map[model_name]['prompt_format_string']
         }
         reformulated_input, remaining_requests, remaining_seconds = inference(json)
         reformulated_inputs.append({'original_input': input_text, 'reformulated_input': reformulated_input})
@@ -101,7 +98,7 @@ def reformulate_inputs(data_batch, model, id_examples):
     return reformulated_data
 
 
-def get_accuracy_with_reformulated_inputs(reformulated_data, model):
+def get_accuracy_with_reformulated_inputs(reformulated_data, model_name):
     prompt = ("For sentiment analysis: Your task is to perform a sentiment analysis on a given input text and "
               "provide a single word indicating whether the sentiment is positive, negative, or neutral. The input text "
               "may contain any language or style of writing. Please ensure that your analysis takes into account the overall "
@@ -111,12 +108,14 @@ def get_accuracy_with_reformulated_inputs(reformulated_data, model):
               "take into account all relevant factors, such as tone, language use, and content. Your response should also be "
               "flexible enough to allow for various types of input texts.")
     reformulated_data['zero_shot_prompt'] = reformulated_data.apply(lambda x: f"Prompt: {prompt}\nsummary : {x['reformulated_input']}\nSentiment:", axis=1)
-    prediction_data = process_batch(reformulated_data, model_map[model])
+    prediction_data = process_batch(reformulated_data, model_map, model_name)
     prediction_data['predicted_label'] = prediction_data['predicted_label'].str.lower().str.strip()
     prediction_data['actual_label'] = prediction_data['actual_label'].str.lower().str.strip()
     prediction_data['Match'] = np.where(prediction_data['predicted_label'] == prediction_data['actual_label'], 1, 0)
     prediction_data['rewritten'] = reformulated_data['reformulated_input']
     prediction_data['original_input'] = reformulated_data['original_input']
+    print("prediction_data cols:", prediction_data.columns)
+    print("prediction_data head:", prediction_data.head(2))
     # Calculate accuracy
     accuracy = prediction_data['Match'].sum() / prediction_data.shape[0]
     print(f"Accuracy of the model on reformulated inputs: {accuracy:.2%}")
@@ -136,11 +135,11 @@ def main_reformulation_function(dataset_name, model_name_L1, model_name_L2, data
     data_id['actual_label'] = data_id['Label'].map(label_map)
     
     # Reformulate the inputs using L2
-    reformulated_data = reformulate_inputs(data_ood, model_map[model_name_L2], data_id)
+    reformulated_data = reformulate_inputs(data_ood, model_name_L2, data_id)
     reformulated_data['actual_label'] = data_ood['actual_label']
 
     # Get the accuracy scores with the reformulated inputs using L1
-    accuracy, prediction_data = get_accuracy_with_reformulated_inputs(reformulated_data, model_map[model_name_L1])
+    accuracy, prediction_data = get_accuracy_with_reformulated_inputs(reformulated_data, model_name_L1 ) 
 
     # Save the results
     results_path = f'./Prompts/results/{model_name_L1}_reformulated_results_{dataset_name}.csv'
@@ -154,7 +153,7 @@ def run_reformulation_on_all_datasets(model_name_L1, model_name_L2):
     results = []
     
     for dataset in datasets:
-        accuracy, prediction_data = main_reformulation_function(dataset, model_name_L1, model_name_L2, "amazon_subsample")
+        accuracy, prediction_data = main_reformulation_function(dataset, model_name_L1, model_name_L2, "amazon")
         results.append({'Dataset': dataset, 'Accuracy': accuracy})
         print(f"Completed {dataset} with accuracy: {accuracy:.2%}")
 

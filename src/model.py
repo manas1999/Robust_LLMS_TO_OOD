@@ -61,7 +61,7 @@ def main():
         abstain_sentiment_analysis_on_all_datasets(args.model_name)
         return
     elif args.prompt_type == 'reformulation':
-        run_reformulation_on_all_datasets("llama_70b","llama_70b")
+        run_reformulation_on_all_datasets(args.model_name,args.model_name)
         return
     
         
