@@ -115,7 +115,8 @@ def get_accuracy_with_reformulated_inputs(reformulated_data, model):
     prediction_data['predicted_label'] = prediction_data['predicted_label'].str.lower().str.strip()
     prediction_data['actual_label'] = prediction_data['actual_label'].str.lower().str.strip()
     prediction_data['Match'] = np.where(prediction_data['predicted_label'] == prediction_data['actual_label'], 1, 0)
-
+    prediction_data['rewritten'] = reformulated_data['reformulated_input']
+    prediction_data['original_input'] = reformulated_data['original_input']
     # Calculate accuracy
     accuracy = prediction_data['Match'].sum() / prediction_data.shape[0]
     print(f"Accuracy of the model on reformulated inputs: {accuracy:.2%}")
