@@ -10,6 +10,7 @@ from Prompts.dataset_generation import rewrite_reviews
 from scripts.fine_tune import finetune_roberta,finetune_t5,finetune_gpt2
 from scripts.other_tuning import fine_tune_lora,fine_tune_with_qlora,full_finetune
 from data.dataLoader import data_loader
+from data.synthetic_data_generation import main_synthetic_data
 from data.subSampling import subsample_and_save
 from scripts.Evaluation import evaluate
 from Prompts.Explanation import explanation_sentiment_analysis_on_all_datasets
@@ -30,6 +31,7 @@ def main():
     parser.add_argument('--batch_size', type=int)
     parser.add_argument('--subSample', type=str)
     parser.add_argument('--evaluate',type=str)
+    parser.add_argument('--data', action='store_true')
 
     args = parser.parse_args()
 
@@ -78,6 +80,9 @@ def main():
     #Load the dataset 
     if args.dataset:
             _ , data = data_loader.generic_data_loader(args.dataset)
+    if args.data:
+         main_synthetic_data()
+         return
 
         # select the method to finetune on
     if args.finetune == 'lora':
