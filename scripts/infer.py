@@ -5,8 +5,6 @@ import openai
 from langchain_openai import OpenAI
 from transformers import pipeline
 from dotenv import load_dotenv
-import os
-
 
 
 def test_model(test_texts_ood, y_test_ood, model_name):
@@ -30,9 +28,7 @@ def test_model(test_texts_ood, y_test_ood, model_name):
             output = model.generate(input_ids=input_ids, attention_mask=attention_mask)
 
         generated_text = tokenizer.decode(output[0], skip_special_tokens=True)
-        # Here, you need to extract the numeric prediction from generated_text
-        # Implement this extraction based on your model's output format
-        predicted_value = float(generated_text.split()[-1])  # Placeholder extraction
+        predicted_value = float(generated_text.split()[-1])  
         predicted_values.append(predicted_value)
 
     predicted_values = np.array(predicted_values)
@@ -45,7 +41,6 @@ def infer(model, tokenizer , prompt):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
     print("Loaded the model\n")
-     # Check if tokenizer has a pad_token if not, set it to eos_token this is to remove the warning 
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     
@@ -54,55 +49,33 @@ def infer(model, tokenizer , prompt):
     attention_mask = encoded_input['attention_mask'].to(device)
 
     
-    output = model.generate(input_ids, attention_mask=attention_mask, max_length=50, num_return_sequences=1, no_repeat_ngram_size=2)#,pad_token_id=pad_token_id)
-    # Decode the output
-    decoded_output = tokenizer.decode(output[0], skip_special_tokens=True)
-    
+    output = model.generate(input_ids, attention_mask=attention_mask, max_length=50, num_return_sequences=1, no_repeat_ngram_size=2)
+    decoded_output = tokenizer.decode(output[0], skip_special_tokens=True)    
     print("Generated Text:", decoded_output)
 
-
-
-import openai
-import os
-import os
-import openai
-from dotenv import load_dotenv
-
 def infer_gpt(msg):
-    # Load environment variables from .env file
     load_dotenv()
     openai.api_key = ''
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # Adjusted to a newer, commonly used model. Adjust as needed.
+            model="gpt-3.5-turbo",  
             messages=[
                 {"role": "user", "content": msg}
             ]
         )
-        print(response['choices'][0]['message']['content'].strip())  # Adjusted to match the new response structure
+        print(response['choices'][0]['message']['content'].strip())  
     except Exception as e:
         print(f"An error occurred: {e}")
 
 
-
 def infer_langchain(prompt):
-
-    # Initialize the LLM with your API key
     llm = OpenAI(api_key="")
-
-    # Get the response from the LLM
     response = llm(prompt)
-
-    # Print the output
     print(response)
 
 
-
 def infer_hf(prompt):
-
-    # Use your Hugging Face API key
     hf_api_key = ""
-
     generator = pipeline(model="gpt2", use_auth_token=hf_api_key)
     response = generator(prompt, max_length=50)
     print(response[0]['generated_text'])

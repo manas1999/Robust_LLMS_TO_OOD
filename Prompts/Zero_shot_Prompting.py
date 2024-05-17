@@ -1,14 +1,13 @@
 import pandas as pd
 import numpy as np
 import time
+import os
 import requests
 from collections import defaultdict
-
-# Assuming data_loader is correctly imported and configured
 from data.dataLoader import data_loader
 
 endpoint = 'https://api.together.xyz/inference'
-TOGETHER_API_KEY = '9b3a40a05619e5f1992938cc171800fe2140055652aa4524fc942ae4e1f89ff7'
+TOGETHER_API_KEY = os.getenv('TOGETHER_API_KEY')
 model_map = {
     "gemma_2b": {"model": "google/gemma-2b-it", "prompt_format_string": "<human>: {prompt}\n<bot>:", "type":"chat"},
     "phi_2": {"model": "microsoft/phi-2", "prompt_format_string": None, "type":"language"},
@@ -20,7 +19,7 @@ model_map = {
 }
 
 def inference(json, retries=3):
-    response_headers = {}  # Ensure response_headers is always defined
+    response_headers = {}  
     for attempt in range(retries):
         try:
             res = requests.post(endpoint, json=json, headers={"Authorization": f"Bearer {TOGETHER_API_KEY}"})
@@ -90,7 +89,7 @@ def process_batch(data_batch, model_map, model_name):
         
         predicted_label, remaining_requests, remaining_seconds = inference(json)
         prediction_df_rows.append({'prompt': prompt, 'predicted_label': predicted_label, 'actual_label': row['actual_label']})
-        time.sleep(1)  # Rate limit handling
+        time.sleep(1)  
 
     prediction_data = pd.DataFrame(prediction_df_rows)
     return prediction_data
@@ -98,13 +97,11 @@ def process_batch(data_batch, model_map, model_name):
 def main_zero_shot_fucntion(dataset_name, model_name):
     _, test_dataset = data_loader.generic_data_loader(dataset_name)
     
-    # Downsample the dataset
     data = test_dataset.to_pandas()
     
     label_map = {0: 'negative', 1: 'positive', 2: 'neutral'}
     data['actual_label'] = data['Label'].map(label_map)
     
-    # Creating the prompt for each sample in the dataset
     prompt = ("For sentiment analysis: Your task is to perform a sentiment analysis on a given input text and "
               "provide a single word indicating whether the sentiment is positive, negative, or neutral. The input text "
               "may contain any language or style of writing. Please ensure that your analysis takes into account the overall "
@@ -120,11 +117,9 @@ def main_zero_shot_fucntion(dataset_name, model_name):
     prediction_data['actual_label'] = prediction_data['actual_label'].str.lower().str.strip()
     prediction_data['Match'] = np.where(prediction_data['predicted_label'] == prediction_data['actual_label'], 1, 0)
 
-    # Calculate accuracy
     accuracy = prediction_data['Match'].sum() / prediction_data.shape[0]
     print(f"Accuracy of the model on {dataset_name}: {accuracy:.2%}")
 
-    # Save the results
     results_path = f'./Prompts/results/{model_name}_zero_shot_results_{dataset_name}.csv'
     prediction_data.to_csv(results_path, index=False)
     print(f"Results saved to {results_path}")
@@ -133,31 +128,24 @@ def main_zero_shot_fucntion(dataset_name, model_name):
 
 
 def main_K_shot_function(dataset_name, model_name, k=1):
-    # Load the test dataset
     _, test_dataset = data_loader.generic_data_loader(dataset_name)
-    # Load the Amazon dataset
     train_dataset, _ = data_loader.generic_data_loader('amazon')
 
-    # Convert datasets to pandas DataFrames
     data = test_dataset.to_pandas()
     amazon_data = train_dataset.to_pandas()
 
-    # Map numeric labels to text
     label_map = {0: 'negative', 1: 'positive', 2: 'neutral'}
     data['actual_label'] = data['Label'].map(label_map)
 
-    # Randomly pick one example from each label in the Amazon dataset
     examples = defaultdict(list)
     for label in [0, 1, 2]:
         examples[label] = amazon_data[amazon_data['Label'] == label].sample(n=k)
 
-    # Build the K-shot prompt with examples from Amazon dataset
     base_prompt = (
         "For sentiment analysis: Your task is to perform a sentiment analysis on a given input text and "
         "provide a single word indicating whether the sentiment is positive, negative, or neutral. Here are some examples:\n\n"
     )
 
-    # Adding examples to the base prompt
     for label in [0, 1, 2]:
         for _, row in examples[label].iterrows():
             base_prompt += f"Text: \"{row['Text']}\"\nSentiment: {label_map[row['Label']]}\n\n"
@@ -166,21 +154,17 @@ def main_K_shot_function(dataset_name, model_name, k=1):
         "Now, analyze the following text and provide the sentiment:\n\n"
     )
 
-    # Apply the prompt to each sample in the test dataset
     data['zero_shot_prompt'] = data.apply(lambda x: f"{base_prompt}Text: {x['Text']}\nSentiment:", axis=1)
 
-    # Process the batch and predict the sentiment
     prediction_data = process_batch(data, model_map, model_name)
     prediction_data['predicted_label'] = prediction_data['predicted_label'].str.lower().str.strip()
     prediction_data['actual_label'] = prediction_data['actual_label'].str.lower().str.strip()
 
-    # Compute the accuracy of predictions
     prediction_data['Match'] = np.where(prediction_data['predicted_label'] == prediction_data['actual_label'], 1, 0)
     accuracy = prediction_data['Match'].sum() / prediction_data.shape[0]
 
     print(f"Accuracy of the model on {dataset_name}: {accuracy:.2%}")
 
-    # Save the results
     results_path = f'./Prompts/results/{model_name}_K_Shot_results_{dataset_name}.csv'
     prediction_data.to_csv(results_path, index=False)
     print(f"Results saved to {results_path}")

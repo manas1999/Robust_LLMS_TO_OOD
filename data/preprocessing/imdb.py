@@ -26,17 +26,13 @@ def text_process(example):
 
 def preprocess_imdb():
     set_seed(0)
-    # Load dataset from Hugging Face, not from disk
     dataset = load_dataset("stanfordnlp/imdb")
 
-    # Map text processing and shuffle
     dataset = dataset.map(text_process).shuffle(seed=0)
 
-    # Split the data
     train = dataset['train']
     test = dataset['test']
 
-    # Compute maximum length for balancing classes in training set
     labels = np.array(train['label'])
     max_length = max(
         np.sum(labels == 0),
@@ -44,7 +40,6 @@ def preprocess_imdb():
     )
     print("max length:", max_length)
 
-    # Enforce max_length per class in train dataset
     train_dataset = []
     label_count = {0: 0, 1: 0}
     for data in train:
@@ -52,10 +47,8 @@ def preprocess_imdb():
             train_dataset.append({'Text': data['text'], 'Label': data['label']})
             label_count[data['label']] += 1
 
-    # Prepare test dataset
     test_dataset = [{'Text': data['text'], 'Label': data['label']} for data in test]
 
-    # Save the processed data
     save_data(train_dataset, "./data/processed/imdb", "train")
     save_data(test_dataset, "./data/processed/imdb", "test")
 

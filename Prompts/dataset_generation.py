@@ -2,11 +2,11 @@ import pandas as pd
 import numpy as np
 from data.dataLoader import data_loader
 import time
+import os
 import requests
 
 endpoint = 'https://api.together.xyz/inference'
-#TOGETHER_API_KEY = '76d1f3828a741254dd8bbd827864a95196c1845ff2dca061114700f6cd895952'
-TOGETHER_API_KEY = 'b6d88abbef67ca7f632b84c96d6c3505035b91d35c6fd282dc59e7b22b0be7cd' #Manas Madine
+TOGETHER_API_KEY = os.getenv('TOGETHER_API_KEY')
 
 def inference(json, retries=3):
     for attempt in range(retries):
@@ -54,7 +54,6 @@ def process_batch(data_batch, model):
             'original_text': row['Text'], 
             'rewritten_text': predicted_text
         })
-        # Monitor progress for every 100 reviews processed
         if (index + 1) % 10 == 0:
             print(f"Processed {index + 1} reviews.")
 
@@ -65,7 +64,6 @@ def process_batch(data_batch, model):
 def rewrite_reviews(dataset_name, model_name):
     dataset, _ = data_loader.generic_data_loader(dataset_name)
     data = dataset.to_pandas().sample(n=1000, random_state=1)
-    #data = dataset.to_pandas()
     rewrite_prompt = (
         "Given the text of a review, rewrite the review to standardize its style, tone, and format. The rewritten review should be neutral in tone, concise, and should focus on the essential aspects of the product or service reviewed without personal anecdotes. Ensure that the language used is formal and consistent, suitable for a generic review platform. Adjust any colloquialisms, overly casual or overly formal language to these standards."
     )
@@ -81,7 +79,6 @@ def run_rewriting_on_datasets():
         rewrite_reviews(dataset, 'llama_70b')
         print(f"Completed rewriting for {dataset}.")
 
-# Define model_map globally
 model_map = {
     "llama_70b": 'meta-llama/Llama-2-70b-chat-hf'
 }

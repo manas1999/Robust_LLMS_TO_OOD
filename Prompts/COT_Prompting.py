@@ -2,22 +2,22 @@ import pandas as pd
 import numpy as np
 import requests
 import time
+import os
 from data.dataLoader import data_loader
 
-# API configuration
 endpoint = "https://api.together.xyz/inference"
-TOGETHER_API_KEY = "76d1f3828a741254dd8bbd827864a95196c1845ff2dca061114700f6cd895952"
+TOGETHER_API_KEY = os.getenv('TOGETHER_API_KEY')
 model_map = {
     "gemma_2b": "google/gemma-2b-it",
     "phi_2": "microsoft/phi-2",
     "llama_2b_it": "togethercomputer/Llama-2-7B-32K-Instruct",
-    "Mistral": "mistralai/Mistral-7B-v0.1",  # not instruct
-    "Gemma": "google/gemma-7b",  # not instruct
+    "Mistral": "mistralai/Mistral-7B-v0.1",  
+    "Gemma": "google/gemma-7b", 
     "llama_70b": 'meta-llama/Llama-2-70b-chat-hf',
     "llama_8b_it":'meta-llama/Llama-3-8b-chat-hf'
 }
 def inference(json, retries=3):
-    response_headers = {}  # Ensure response_headers is always defined
+    response_headers = {}  
     for attempt in range(retries):
         try:
             res = requests.post(endpoint, json=json, headers={"Authorization": f"Bearer {TOGETHER_API_KEY}"})
@@ -70,7 +70,7 @@ def process_batch(data_batch, model):
         }
         prediction, remaining_requests, remaining_seconds = inference(json)
         prediction_df_rows.append({'prompt': prompt, 'prediction': prediction, 'actual_label': row['actual_label']})
-        time.sleep(1)  # Rate limit handling
+        time.sleep(1)  
 
     prediction_data = pd.DataFrame(prediction_df_rows)
     return prediction_data
@@ -105,7 +105,6 @@ def CoT(dataset_name, model_name):
     accuracy = prediction_data['Match'].sum() / prediction_data.shape[0]
     print(f"Accuracy of the model on {dataset_name}: {accuracy:.2%}")
 
-    # Save the results including the reason for the prediction
     results_path = f'./Prompts/results/{model_name}_COT_detailed_results_{dataset_name}.csv'
     prediction_data.to_csv(results_path, index=False)
     print(f"Results saved to {results_path}")

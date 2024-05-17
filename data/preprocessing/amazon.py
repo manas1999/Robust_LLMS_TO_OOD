@@ -1,96 +1,3 @@
-'''import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from src.utils.utils_processing import set_seed, save_data
-set_seed(0)
-
-import os
-import re
-import json
-import random
-import numpy as np
-import pandas as pd
-from datasets import Dataset, concatenate_datasets
-from tqdm import tqdm
-'''
-'''def text_process(text):
-    text = re.sub("\t", " ", text)
-    text = re.sub(" +", " ", text)
-    return text
-
-label_mapping = {1:0, 2:-1, 3:2, 4:-1, 5:1}
-def label_process(label):
-    label = label_mapping[label]
-    return label
-
-# load and shuffle
-amazon = []
-base_path = "./raw/SentimentAnalysis/amazon"
-subsets = os.listdir(base_path)
-subset_max_length = 20000
-
-# For function "eval". Otherwise, 'NameError' rises.
-true = True
-false = False
-for subset in subsets:
-    f = open(f'{base_path}/{subset}','r')
-    lines = f.readlines()
-    random.shuffle(lines)
-    # there may be some invalid samples, so we first take 2*subset_max_length samples, instead of subset_max_length.
-    lines = [eval(line) for line in tqdm(lines[:int(2*subset_max_length)], desc=subset) if "reviewText" in line]
-    lines = [{"text":line["reviewText"], "label":int(line["overall"])} for line in tqdm(lines[:subset_max_length], desc=subset)]
-
-    amazon.extend(lines)
-
-amazon = pd.DataFrame(amazon, columns=["text", "label"])
-amazon["text"] = amazon["text"].apply(text_process)
-amazon["label"] = amazon["label"].apply(label_process)
-amazon = [{"text":data[0], "label":data[1]} for data in amazon.values if data[1] != -1]
-
-random.shuffle(amazon)
-
-# split
-train_len = int(0.9 * len(amazon))
-train, test = amazon[:train_len], amazon[train_len:]
-labels = np.array([data["label"] for data in train])
-
-# manually set max_length
-max_length = 10000
-label_count = {0:0, 1:0, 2:0}
-
-# train
-train_dataset = []
-for data in train:
-    if label_count[data["label"]] < max_length:
-        train_dataset.append((data["text"], data["label"]))
-        label_count[data["label"]] += 1
-
-# test
-test_dataset = []
-for data in test:
-    test_dataset.append((data["text"], data["label"]))
-
-# save
-save_data(train_dataset, "./datasets/process/SentimentAnalysis/amazon", "train")
-save_data(test_dataset, "./datasets/process/SentimentAnalysis/amazon", "test")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-'''
-
-
 def download_amazon_dataset():
 
     urls = r"""
@@ -145,24 +52,18 @@ def download_and_process(urls, max_records_per_file=1000, total_max_records=2000
             break
         print(f"Downloading and processing from {url}...")
         with requests.get(url, stream=True) as response:
-            # Check if the download was successful
             if response.status_code == 200:
-                # Wrap the raw stream with gzip decompressor
                 decompressor = gzip.GzipFile(fileobj=response.raw)
                 
-                # Create a buffer to read line-by-line
                 reader = io.BufferedReader(decompressor)
                 
                 count = 0
                 for line in reader:
                     if count >= max_records_per_file or total_records >= total_max_records:
                         break
-                    # Decode bytes to string and load JSON
                     data = json.loads(line.decode('utf-8'))
                     count += 1
                     total_records += 1
-                    # Process your data here (e.g., save to a file or database)
-                    # For demonstration, we'll print some part of the data
                     print(data.get('reviewText', 'No review text found'))
 
                 print(f"Processed {count} records from {url.split('/')[-1]}")

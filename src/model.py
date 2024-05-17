@@ -1,6 +1,3 @@
-import numpy as np
-import torch
-import pandas as pd
 import argparse
 from Prompts.Zero_shot_Prompting import run_sentiment_analysis_on_all_datasets,k_shot_run_sentiment_analysis_on_all_datasets
 from Prompts.kshot_Prompting import k_shot_run_sentiment_analysis_on_all_datasets_kshot
@@ -34,13 +31,11 @@ def main():
     parser.add_argument('--data', action='store_true')
 
     args = parser.parse_args()
-
     print(args.evaluate)
+
     if args.evaluate :
          evaluate(args.evaluate)
          return
-     ## for prompting
-    
     if args.prompt_type == 'zero_shot_prompt':
         run_sentiment_analysis_on_all_datasets(args.model_name)
         return 
@@ -66,9 +61,6 @@ def main():
         run_reformulation_on_all_datasets(args.model_name,args.model_name)
         return
     
-        
-        
-         
     
     if args.subSample:
         total_samples, samples_per_label, subsample_file_path = subsample_and_save(args.subSample)
@@ -76,15 +68,11 @@ def main():
         print(f"Samples per label:\n{samples_per_label}")
         print(f"Subsampled data saved to: {subsample_file_path}")
         return 
-    
-    #Load the dataset 
     if args.dataset:
             _ , data = data_loader.generic_data_loader(args.dataset)
     if args.data:
          main_synthetic_data()
          return
-
-        # select the method to finetune on
     if args.finetune == 'lora':
         fine_tune_lora("train_dataset.txt", args.model_name)
         return
@@ -103,6 +91,7 @@ def main():
     elif args.finetune == "finetune_gpt2":
          finetune_gpt2(data,args.batch_size)
          return
+
 
 if __name__ == "__main__":
     main()

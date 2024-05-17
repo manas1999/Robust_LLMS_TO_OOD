@@ -30,6 +30,10 @@ The main script is designed to be used from the command line with several option
 - `--prompt`: Prompt string for testing the model in inference mode.
 - `--data`: Choose the data source for fine-tuning: `synthetic` data or an external `dataset`.
 
+set your together api key in the local environment using this command
+```
+export TOGETHER_API_KEY=your_api_key
+```
 **Example Command**:
 
 ```bash

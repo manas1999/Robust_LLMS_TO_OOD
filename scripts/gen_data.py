@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 
 
 def generate_synthetic_data(n_samples, n_features, shift_intensity=0, sigma_noise=1):

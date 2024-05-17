@@ -24,7 +24,7 @@ def text_process(example):
     example["text"] = re.sub(" +", " ", example["text"])
     return example
 
-label_mapping = {0:0, 4:1, 2:2}  # Adjust according to actual dataset label distribution
+label_mapping = {0:0, 4:1, 2:2}  
 def label_process(example):
     example["label"] = label_mapping[example["label"]]
     return example
@@ -38,17 +38,13 @@ def print_dataset_info(train_data, test_data):
 
 def preprocess_yelp():
     set_seed(0)
-    # Load dataset from Hugging Face
     dataset = load_dataset("yelp_review_full")
     
-    # Check the column names
-    print(dataset['train'].column_names)  # This will help confirm the correct label column name
+    print(dataset['train'].column_names)  
 
-    # Filtering and mapping labels
     dataset = dataset.filter(lambda example: example["label"] in [0, 2, 4])
     dataset = dataset.map(text_process).map(label_process).shuffle(seed=0)
 
-    # Split into train and test
     if isinstance(dataset, DatasetDict):
         train = dataset['train']
         test = dataset['test']
@@ -57,21 +53,17 @@ def preprocess_yelp():
         train = train_test_split['train']
         test = train_test_split['test']
 
-    # Manually set max_length
     max_length = 50000
     label_count = {0:0, 1:0, 2:0}
 
-    # Preparing limited train dataset
     train_dataset = []
     for data in train:
         if label_count[data["label"]] < max_length:
             train_dataset.append({"Text": data['text'], "Label": data['label']})
             label_count[data["label"]] += 1
 
-    # Preparing test dataset
     test_dataset = [{"Text": data['text'], "Label": data['label']} for data in test]
 
-    # Save the processed data
     save_data(train_dataset, "./data/processed/yelp_full", "train")
     save_data(test_dataset, "./data/processed/yelp_full", "test")
     print_dataset_info(train_dataset, test_dataset)

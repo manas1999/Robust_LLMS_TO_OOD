@@ -53,7 +53,6 @@ def read_data(path):
     return dataset
 
 def preprocess_semeval():
-    # load and shuffle
     set_seed(0)
     base_path = "./data/raw/SentimentAnalysis/SemEval/Gold/Subtask_A"
     dataset = {
@@ -62,11 +61,10 @@ def preprocess_semeval():
         }
     random.shuffle(dataset["train"])
     random.shuffle(dataset["test"])
-    # split
+
     train, test = dataset["train"], dataset["test"]
     labels = np.array([data["label"] for data in train])
 
-    # compute max_length
     train_len = len(train)
     max_length = max(
                     np.sum(np.where(labels==0, np.ones((train_len,)), np.zeros((train_len,)))),
@@ -76,18 +74,15 @@ def preprocess_semeval():
     print("max length:", max_length)
     label_count = {0:0, 1:0, 2:0}
 
-    # train
     train_dataset = []
     for data in train:
         if label_count[data["label"]] < max_length:
             train_dataset.append((data["text"], data["label"]))
             label_count[data["label"]] += 1
 
-    # test
     test_dataset = []
     for data in test:
         test_dataset.append((data["text"], data["label"]))
 
-    # save
     save_data(train_dataset, "./data/processed/semeval", "train")
     save_data(test_dataset, "./data/processed/semeval", "test")

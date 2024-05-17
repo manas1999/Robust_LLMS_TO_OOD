@@ -31,15 +31,12 @@ def label_process(example):
 
 def preprocess_dynasent():
     set_seed(0)
-    # Specify the dataset configuration
     config_name_r1 = 'dynabench.dynasent.r1.all'
     config_name_r2 = 'dynabench.dynasent.r2.all'
 
-    # Load the dataset with the specified configuration
     dataset_r1 = load_dataset("dynabench/dynasent", config_name_r1)
     dataset_r2 = load_dataset("dynabench/dynasent", config_name_r2)
 
-    # Rename columns and process labels and text
     processed_datasets = {}
     splits = ['train', 'test']
     for config, config_name in zip([dataset_r1, dataset_r2], [config_name_r1, config_name_r2]):
@@ -47,15 +44,12 @@ def preprocess_dynasent():
             processed_datasets[f"{config_name}_{split}"] = config[split].rename_column("sentence", "text").rename_column("gold_label", "label")
             processed_datasets[f"{config_name}_{split}"] = processed_datasets[f"{config_name}_{split}"].map(text_process).map(label_process)
 
-    # Concatenate train and test sets from both rounds and shuffle
     train = concatenate_datasets([processed_datasets[f"{config_name_r1}_train"], processed_datasets[f"{config_name_r2}_train"]]).shuffle(seed=0)
     test = concatenate_datasets([processed_datasets[f"{config_name_r1}_test"], processed_datasets[f"{config_name_r2}_test"]]).shuffle(seed=0)
 
-    # Prepare datasets for saving
     train_dataset = [{"Text": data['text'], "Label": data['label']} for data in train]
     test_dataset = [{"Text": data['text'], "Label": data['label']} for data in test]
 
-    # Save the processed data
     save_data(train_dataset, "./data/processed/dynasent", "train")
     save_data(test_dataset, "./data/processed/dynasent", "test")
 

@@ -1,15 +1,11 @@
 from datasets import load_dataset
-from transformers import AutoTokenizer, AutoModelForCausalLM, DataCollatorForLanguageModeling, Trainer, TrainingArguments,TextDataset,AutoModelForSequenceClassification
+from transformers import AutoTokenizer, AutoModelForCausalLM, DataCollatorForLanguageModeling, Trainer, TrainingArguments,TextDataset,AutoModelForSequenceClassification, BertForSequenceClassification
 from peft import prepare_model_for_kbit_training, LoraConfig, get_peft_model
 import pandas as pd
 import numpy as np
 from datasets import Dataset
 import torch
 import logging
-from transformers import AutoTokenizer, AutoModelForCausalLM,BertForSequenceClassification
-import time
-import wandb
-
 
 
 def fine_tune_lora(dataset_path, model_name, output_dir="./finetuned_model", epochs=3):
@@ -37,11 +33,8 @@ def fine_tune_lora(dataset_path, model_name, output_dir="./finetuned_model", epo
 
     trainer.train()
 
-# Updated function for fine-tuning with QLoRA
 def fine_tune_with_qlora(dataset_path, model_id, output_dir="./qlora_finetuned", epochs=3):
     
-
-    # Setup logging
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
 
@@ -53,13 +46,11 @@ def fine_tune_with_qlora(dataset_path, model_id, output_dir="./qlora_finetuned",
     def tokenize_function(examples):
         return tokenizer(examples["input_text"], truncation=True,max_length=512)
 
-    # Explicitly trust the remote code by setting trust_remote_code=True
     tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
     if tokenizer.pad_token is None:
         print("Setting `pad_token` to `eos_token`:", tokenizer.eos_token)
         tokenizer.pad_token = tokenizer.eos_token
 
-    # Load the dataset
     reviews = pd.read_csv('/Users/manasmadine/Desktop/OneDrive/NLP/Project_Experements/EXP_1/Datasets/flipkart_reviews.csv')
     labels =  pd.read_csv('/Users/manasmadine/Desktop/OneDrive/NLP/Project_Experements/EXP_1/Datasets/flipkart_labels.csv')
 
@@ -68,9 +59,7 @@ def fine_tune_with_qlora(dataset_path, model_id, output_dir="./qlora_finetuned",
     
     tokenized_data = data.map(tokenize_function, batched=True)
     
-    # Load the model and apply QLoRA configuration
     model = AutoModelForSequenceClassification.from_pretrained(model_id,num_labels=3, trust_remote_code=True)
-    # Enable gradient checkpointing and prepare for k-bit training
     model.gradient_checkpointing_enable()
     model = prepare_model_for_kbit_training(model)
     config = LoraConfig(
@@ -94,8 +83,8 @@ def fine_tune_with_qlora(dataset_path, model_id, output_dir="./qlora_finetuned",
         prediction_loss_only=True,
         load_best_model_at_end=True,
         metric_for_best_model="accuracy",
-        logging_dir=f'{output_dir}/logs',  # Directory for storing logs
-        logging_steps=10,  # Log every 10 steps
+        logging_dir=f'{output_dir}/logs',  
+        logging_steps=10,  
     )
     
     trainer = Trainer(
@@ -109,36 +98,27 @@ def fine_tune_with_qlora(dataset_path, model_id, output_dir="./qlora_finetuned",
     logger.info("Starting training...")
     trainer.train()
     logger.info("Training completed.")
-    # Save the fine-tuned model and tokenizer
 
     model.save_pretrained('/Users/manasmadine/Desktop/OneDrive/NLP/Project_Experements/EXP_1/FineTuned_Models/qlora_finetuned')
     tokenizer.save_pretrained('/Users/manasmadine/Desktop/OneDrive/NLP/Project_Experements/EXP_1/FineTuned_Models/qlora_finetuned')
-    # Define accuracy metric function
     def compute_metrics(eval_pred):
         logits, labels = eval_pred
         predictions = np.argmax(logits, axis=-1)
         return {"accuracy": (predictions == labels).mean()}
 
-    
-
-
 
 def full_finetune(dataset_path, model, output_dir="./full_finetuned", epochs=3):
     model = BertForSequenceClassification.from_pretrained(model, num_labels=3)
     tokenizer = AutoTokenizer.from_pretrained(model)
-    # Load the dataset
     dataset = load_dataset('text', data_files={'train': dataset_path})
     
-    # Tokenize the dataset
     def tokenize_function(examples):
         return tokenizer(examples["input_text"], padding="max_length", truncation=True, max_length=512)
     
     tokenized_datasets = dataset.map(tokenize_function, batched=True)
     
-    # Create a data collator that dynamically pads the inputs received, as well as the labels.
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
     
-    # Define training arguments
     training_args = TrainingArguments(
         output_dir=output_dir,
         overwrite_output_dir=True,
@@ -147,9 +127,7 @@ def full_finetune(dataset_path, model, output_dir="./full_finetuned", epochs=3):
         save_steps=10_000,
         save_total_limit=2,
         fp16=True,
-    )
-    
-    # Initialize the Trainer
+    )    
     trainer = Trainer(
         model=model,
         args=training_args,
@@ -157,6 +135,5 @@ def full_finetune(dataset_path, model, output_dir="./full_finetuned", epochs=3):
         train_dataset=tokenized_datasets["train"],
     )
     model.config.use_cache = False 
-    # Start fine-tuning           
     trainer.train()
 

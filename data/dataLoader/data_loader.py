@@ -11,15 +11,12 @@ def yelp_data_loader():
     return Dataset.from_pandas(dataset)
 
 def generic_data_loader(dataset_name):
-    # Assuming the file structure follows the format shown in the screenshot
     test_file_path = f'./data/processed/{dataset_name}/test.tsv'
     train_file_path = f'./data/processed/{dataset_name}/train.tsv'
     
-    # Read the TSV files
     test_df = pd.read_csv(test_file_path, sep='\t')
     train_df = pd.read_csv(train_file_path, sep='\t')
 
-    # Correctly assign datasets to their respective variables
     train_dataset = Dataset.from_pandas(train_df)
     test_dataset = Dataset.from_pandas(test_df)
     
