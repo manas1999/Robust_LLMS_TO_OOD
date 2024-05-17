@@ -34,6 +34,11 @@ set your together api key in the local environment using this command
 ```
 export TOGETHER_API_KEY=your_api_key
 ```
+set your wandb key in the local environment using this command
+```
+export WAND_KEY=your_wandb_key
+```
+
 **Example Command**:
 
 ```bash
