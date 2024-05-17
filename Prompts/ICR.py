@@ -6,7 +6,9 @@ from data.dataLoader import data_loader
 
 endpoint = 'https://api.together.xyz/inference'
 TOGETHER_API_KEY = '9f33eff41b7f527b6804592e85b685ab18070c90d9cad652e7e1cc18786c587e'
-model_map = { "llama_70b": {"model": 'meta-llama/Llama-2-70b-chat-hf', "prompt_format_string": "[INST]  {prompt}\n [/INST]", "type":"chat"},
+model_map = { 
+    "gemma_2b": {"model": "google/gemma-2b-it", "prompt_format_string": "<human>: {prompt}\n<bot>:", "type":"chat"},
+    "llama_70b": {"model": 'meta-llama/Llama-2-70b-chat-hf', "prompt_format_string": "[INST]  {prompt}\n [/INST]", "type":"chat"},
     "llama_8b_it": {"model": 'meta-llama/Llama-3-8b-chat-hf', "prompt_format_string": "<human>: {prompt}\n<bot>:", "type":"chat"}}
 
 def inference(json, retries=3):
