@@ -71,7 +71,15 @@ def process_batch(data_batch, model):
         }
         predicted_label, remaining_requests, remaining_seconds = inference(json)
         prediction_df_rows.append({'prompt': prompt, 'predicted_label': predicted_label, 'actual_label': row['actual_label']})
+<<<<<<< Updated upstream
         time.sleep(1)  
+=======
+        # Print progress after every 100 data points
+        if (index + 1) % 100 == 0:
+            print(f"Processed {index + 1} data points.")
+
+        time.sleep(1)  # Rate limit handling
+>>>>>>> Stashed changes
 
     prediction_data = pd.DataFrame(prediction_df_rows)
     return prediction_data
@@ -79,6 +87,11 @@ def process_batch(data_batch, model):
 def main_abstain_function(dataset_name, model_name):
     _, test_dataset = data_loader.generic_data_loader(dataset_name)
     data = test_dataset.to_pandas()
+<<<<<<< Updated upstream
+=======
+    #data = data.head(200)
+    #data = pd.DataFrame([{'Text': " asonfoin safnioie fainfoiqen   ", 'Label': 'Neutral'}])
+>>>>>>> Stashed changes
     label_map = {0: 'negative', 1: 'positive', 2: 'neutral'}
     data['actual_label'] = data['Label'].map(label_map)
     

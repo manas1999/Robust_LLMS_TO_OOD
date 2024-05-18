@@ -12,14 +12,23 @@ model_map = {
     "gemma_2b": "google/gemma-2b-it",
     "phi_2": "microsoft/phi-2",
     "llama_2b_it": "togethercomputer/Llama-2-7B-32K-Instruct",
+<<<<<<< Updated upstream
     "Mistral": "mistralai/Mistral-7B-v0.1",  
     "Gemma": "google/gemma-7b",  
+=======
+    "Mistral": "mistralai/Mistral-7B-v0.1",
+    "Gemma": "google/gemma-7b",
+>>>>>>> Stashed changes
     "llama_70b": 'meta-llama/Llama-2-70b-chat-hf',
     "llama_8b_it":'meta-llama/Llama-3-8b-chat-hf'
 }
 
 def inference(json, retries=3):
+<<<<<<< Updated upstream
     response_headers = {}  
+=======
+    response_headers = {}
+>>>>>>> Stashed changes
     for attempt in range(retries):
         try:
             res = requests.post(endpoint, json=json, headers={"Authorization": f"Bearer {TOGETHER_API_KEY}"})
@@ -52,6 +61,15 @@ def inference(json, retries=3):
             return "Error from API", "N/A", "N/A"
 
     return "Failed after retries", "N/A", "N/A"
+def extract_sentiment(text):
+    # Look for specific sentiments 
+    reason = ""
+    parts = text.split('Explanation:')
+    sentiment_part = parts[0]
+    if len(parts) > 1:
+        reason = parts[1].strip()
+    sentiment = sentiment_part.split('Sentiment:')[-1].strip()
+    return sentiment, reason
 
 def process_batch(data_batch, model):
     prediction_df_rows = []
@@ -70,20 +88,33 @@ def process_batch(data_batch, model):
             'prompt_format_string': '<human>: {prompt}\n'
         }
         predicted_label, remaining_requests, remaining_seconds = inference(json)
+<<<<<<< Updated upstream
         prediction_df_rows.append({'prompt': prompt, 'predicted_label': predicted_label, 'actual_label': row['actual_label']})
         time.sleep(1)  
+=======
+        prediction_df_rows.append({
+            'prompt': prompt,
+            'predicted_label': predicted_label,  # This should match the DataFrame column name
+            'actual_label': row['actual_label'],
+            'prediction': predicted_label  # Add this line to ensure the column exists
+        })
+        if (index + 1) % 100 == 0:
+            print(f"Processed {index + 1} data points.")
+        time.sleep(1)  # Rate limit handling
+>>>>>>> Stashed changes
 
     prediction_data = pd.DataFrame(prediction_df_rows)
     return prediction_data
 
-def main_explanation_fucntion(dataset_name, model_name):
+def main_explanation_function(dataset_name, model_name):
     _, test_dataset = data_loader.generic_data_loader(dataset_name)
     
     data = test_dataset.to_pandas()
     
-    label_map = {0: 'negative', 1: 'positive', 2: 'neutral'}
+    label_map = {0: 'Negative', 1: 'Positive', 2: 'Neutral'}
     data['actual_label'] = data['Label'].map(label_map)
     
+<<<<<<< Updated upstream
     prompt = ("For sentiment analysis: Your task is to perform a sentiment analysis on a given input text and "
               "provide a single word indicating whether the sentiment is positive, negative, or neutral. The input text "
               "may contain any language or style of writing. Please ensure that your analysis takes into account the overall "
@@ -114,6 +145,27 @@ def main_explanation_fucntion(dataset_name, model_name):
     
     prediction_data['Match'] = np.where(prediction_data['predicted_label'] == prediction_data['actual_label'], 1, 0)
     accuracy = prediction_data['Match'].sum() / prediction_data.shape[0]
+=======
+    prompt = ("Analyze the sentiment of the below review. Provide your sentiment prediction "
+              "(positive or negative or neutral) and a concise explanation for your judgment "
+              "in only one sentence. Expected Output Format:\nSentiment: <prediction>\nExplanation: <explanation>")
+    
+    data['zero_shot_prompt'] = data.apply(lambda x: f"Prompt: {prompt}\nsentence : {x['Text']}\nSentiment:", axis=1)
+    
+    prediction_data = process_batch(data, model_map[model_name])
+    
+    # Check if the prediction column exists and apply the extraction function
+    if 'prediction' in prediction_data.columns:
+        prediction_data[['predicted_label', 'reason']] = prediction_data['prediction'].apply(extract_sentiment).apply(pd.Series)
+    else:
+        print("Error: The 'prediction' column is missing in the DataFrame.")
+        return None, None
+    
+    # Here we treat 'abstain' as being correct if the actual sentiment is unclear
+    prediction_data['Match'] = prediction_data.apply(lambda x: 1 if (x['predicted_label'] == x['actual_label'] ) else 0, axis=1)
+    
+    accuracy = prediction_data['Match'].sum() / len(prediction_data)
+>>>>>>> Stashed changes
     
     print(f"Accuracy of the model on {dataset_name}: {accuracy:.2%}")
     
@@ -123,13 +175,12 @@ def main_explanation_fucntion(dataset_name, model_name):
     
     return accuracy, prediction_data
 
-
 def explanation_sentiment_analysis_on_all_datasets(model_name):
     datasets = ['amazon_subsample', 'dynasent_subsample', 'sst5_subsample', 'semeval_subsample']
     results = []
     
     for dataset in datasets:
-        accuracy, prediction_data = main_explanation_fucntion(dataset, model_name)
+        accuracy, prediction_data = main_explanation_function(dataset, model_name)
         results.append({'Dataset': dataset, 'Accuracy': accuracy})
         print(f"Completed {dataset} with accuracy: {accuracy:.2%}")
 
@@ -138,4 +189,3 @@ def explanation_sentiment_analysis_on_all_datasets(model_name):
     print("Overall results saved to explanation_analysis_overall_results.csv")
     
     return results_df
-

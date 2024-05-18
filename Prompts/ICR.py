@@ -49,7 +49,7 @@ def inference(json, retries=3):
 
 def process_batch(data_batch, model_map, model_name):
     prediction_df_rows = []
-    for _, row in data_batch.iterrows():
+    for index, row in data_batch.iterrows():
         prompt = row['zero_shot_prompt']
         json = {
             'model': model_map[model_name]['model'],
@@ -66,7 +66,14 @@ def process_batch(data_batch, model_map, model_name):
         }
         predicted_label, remaining_requests, remaining_seconds = inference(json)
         prediction_df_rows.append({'prompt': prompt, 'predicted_label': predicted_label, 'actual_label': row['actual_label']})
+<<<<<<< Updated upstream
         time.sleep(1)  
+=======
+        # Print progress after every 100 data points
+        if (index + 1) % 100 == 0:
+            print(f"Processed {index + 1} data points.")
+        time.sleep(1)  # Rate limit handling
+>>>>>>> Stashed changes
 
     prediction_data = pd.DataFrame(prediction_df_rows)
     return prediction_data

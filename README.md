@@ -17,6 +17,7 @@ pip install langchain
 pip install openai==0.28
 pip install -U langchain-community  
 pip install -U sentence-transformers    
+ 
 ```
 
 #### Usage
@@ -41,21 +42,28 @@ export WAND_KEY=your_wandb_key
 
 **Example Command**:
 
+
+
 ```bash
-python main.py --model_name="chargoddard/Yi-34B-Llama" --finetune="lora" --data="synthetic"
-python main.py --model_name="chargoddard/Yi-34B-Llama" --infer "finetune" "tell me a jock ?"
-python main.py --model_name="chargoddard/Yi-34B-Llama" --test_data PATH_TEST_FILE
 
+#Fine Tune Commands
+python -m src.model --dataset yelp --finetune finetune_roberta
+python -m src.model --dataset amazon --finetune finetune_roberta  —batch_size 16
 
+#Prompt methods
+python -m src.model --prompt_type reformulation --model_name gemma_2b #for rewriting 
+python -m src.model --prompt_type explanation  --model_name llama_8b_it # for evaluation
+python -m src.model --prompt_type CoT
 
-python main.py   --infer langchain "Which is the hottest planet?"
+# Evaluate
+python -m src.model —-evaluate t5_sentiment
+
 python main.py   --infer gpt "Which is the hottest planet?"
-python main.py   --infer hf "Which is the hottest planet?"
+
 
 
 #FLIPKART Data
 python main.py --flipkart Clean # to clean the data and save it to the disk use only once 
-python main.py --finetune qlora
 #YELP DATA CLEAN
 python main.py --yelp Clean 
 #imdb DATA CLEAN

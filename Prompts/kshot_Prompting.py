@@ -71,7 +71,14 @@ def process_batch(data_batch, model):
         }
         predicted_label, remaining_requests, remaining_seconds = inference(json)
         prediction_df_rows.append({'prompt': prompt, 'predicted_label': predicted_label, 'actual_label': row['actual_label']})
+<<<<<<< Updated upstream
         time.sleep(1)  
+=======
+        # Print progress after every 100 data points
+        if (index + 1) % 100 == 0:
+            print(f"Processed {index + 1} data points.")
+        time.sleep(1)  # Rate limit handling
+>>>>>>> Stashed changes
 
     prediction_data = pd.DataFrame(prediction_df_rows)
     return prediction_data
@@ -119,7 +126,12 @@ def main_K_shot_function(dataset_name, model_name):
     accuracy = prediction_data['Match'].sum() / prediction_data.shape[0]
     print(f"Accuracy of the model on {dataset_name}: {accuracy:.2%}")
 
+<<<<<<< Updated upstream
     results_path = f'./Prompts/results/{model_name}_results_6_k_shot_samples_{dataset_name}.csv'
+=======
+    # Save the results
+    results_path = f'./Prompts/results/{model_name}_results_k_shot_samples_{dataset_name}.csv'
+>>>>>>> Stashed changes
     prediction_data.to_csv(results_path, index=False)
     print(f"Results saved to {results_path}")
     
@@ -134,8 +146,8 @@ def k_shot_run_sentiment_analysis_on_all_datasets_kshot(model_name):
         results.append({'Dataset': dataset, 'Accuracy': accuracy})
         print(f"Completed {dataset} with accuracy: {accuracy:.2%}")
     results_df = pd.DataFrame(results)
-    results_df.to_csv(f'./Prompts/results/{model_name}_k_shot_overall_results_6_k_shot_samples.csv', index=False)
-    print("Overall results saved to k_shot_sentiment_analysis_overall_results_6_k_shot_samples.csv")
+    results_df.to_csv(f'./Prompts/results/{model_name}_k_shot_overall_results_k_shot_samples.csv', index=False)
+    print("Overall results saved to k_shot_sentiment_analysis_overall_results_k_shot_samples.csv")
     
     return results_df
 
